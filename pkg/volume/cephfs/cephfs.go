@@ -65,7 +65,7 @@ func (plugin *cephfsPlugin) GetAccessModes() []api.PersistentVolumeAccessMode {
 	}
 }
 
-func (plugin *cephfsPlugin) NewMounter(spec *volume.Spec, pod *api.Pod, _ volume.VolumeOptions) (volume.Mounter, error) {
+func (plugin *cephfsPlugin) NewMounter(spec *volume.Spec, node *api.Node, pod *api.Pod, _ volume.VolumeOptions) (volume.Mounter, error) {
 	cephvs := plugin.getVolumeSource(spec)
 	secret := ""
 	if cephvs.SecretRef != nil {

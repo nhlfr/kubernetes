@@ -66,16 +66,23 @@ func (plugin *downwardAPIPlugin) CanSupport(spec *volume.Spec) bool {
 	return spec.Volume != nil && spec.Volume.DownwardAPI != nil
 }
 
-func (plugin *downwardAPIPlugin) NewMounter(spec *volume.Spec, pod *api.Pod, opts volume.VolumeOptions) (volume.Mounter, error) {
+func (plugin *downwardAPIPlugin) NewMounter(spec *volume.Spec, node *api.Node, pod *api.Pod, opts volume.VolumeOptions) (volume.Mounter, error) {
 	v := &downwardAPIVolume{
 		volName: spec.Name(),
+		node:    node,
 		pod:     pod,
 		podUID:  pod.UID,
 		plugin:  plugin,
 	}
-	v.fieldReferenceFileNames = make(map[string]string)
+	v.nodeFieldReferenceFileNames = make(map[string]string)
+	v.podFieldReferenceFileNames = make(map[string]string)
 	for _, fileInfo := range spec.Volume.DownwardAPI.Items {
-		v.fieldReferenceFileNames[fileInfo.FieldRef.FieldPath] = path.Clean(fileInfo.Path)
+		switch fileInfo.Resource {
+		case "node":
+			v.nodeFieldReferenceFileNames[fileInfo.FieldRef.FieldPath] = path.Clean(fileInfo.Path)
+		default:
+			v.podFieldReferenceFileNames[fileInfo.FieldRef.FieldPath] = path.Clean(fileInfo.Path)
+		}
 	}
 	return &downwardAPIVolumeMounter{
 		downwardAPIVolume: v,
@@ -95,11 +102,13 @@ func (plugin *downwardAPIPlugin) NewUnmounter(volName string, podUID types.UID) 
 
 // downwardAPIVolume retrieves downward API data and placing them into the volume on the host.
 type downwardAPIVolume struct {
-	volName                 string
-	fieldReferenceFileNames map[string]string
-	pod                     *api.Pod
-	podUID                  types.UID // TODO: remove this redundancy as soon NewUnmounter func will have *api.POD and not only types.UID
-	plugin                  *downwardAPIPlugin
+	volName                     string
+	nodeFieldReferenceFileNames map[string]string
+	podFieldReferenceFileNames  map[string]string
+	node                        *api.Node
+	pod                         *api.Pod
+	podUID                      types.UID // TODO: remove this redundancy as soon NewUnmounter func will have *api.POD and not only types.UID
+	plugin                      *downwardAPIPlugin
 	volume.MetricsNil
 }
 
@@ -173,7 +182,15 @@ func (b *downwardAPIVolumeMounter) SetUpAt(dir string, fsGroup *int64) error {
 func (d *downwardAPIVolume) collectData() (map[string][]byte, error) {
 	errlist := []error{}
 	data := make(map[string][]byte)
-	for fieldReference, fileName := range d.fieldReferenceFileNames {
+	for fieldReference, fileName := range d.nodeFieldReferenceFileNames {
+		if values, err := fieldpath.ExtractFieldPathAsString(d.node, fieldReference); err != nil {
+			glog.Errorf("Unable to extract fiels %s: %s", fieldReference, err.Error())
+			errlist = append(errlist, err)
+		} else {
+			data[fileName] = []byte(sortLines(values))
+		}
+	}
+	for fieldReference, fileName := range d.podFieldReferenceFileNames {
 		if values, err := fieldpath.ExtractFieldPathAsString(d.pod, fieldReference); err != nil {
 			glog.Errorf("Unable to extract field %s: %s", fieldReference, err.Error())
 			errlist = append(errlist, err)

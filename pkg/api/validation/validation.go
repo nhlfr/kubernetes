@@ -703,6 +703,13 @@ func validateDownwardAPIVolumeSource(downwardAPIVolume *api.DownwardAPIVolumeSou
 		}
 		allErrs = append(allErrs, validateVolumeSourcePath(downwardAPIVolumeFile.Path, fldPath.Child("path"))...)
 		allErrs = append(allErrs, validateObjectFieldSelector(&downwardAPIVolumeFile.FieldRef, &validDownwardAPIFieldPathExpressions, fldPath.Child("fieldRef"))...)
+		switch downwardAPIVolumeFile.Resource {
+		case "node":
+		case "pod":
+		case "":
+		default:
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("resource"), downwardAPIVolumeFile.Resource, "allowed resources are 'node' and 'pod'"))
+		}
 	}
 	return allErrs
 }

@@ -504,6 +504,9 @@ message DownwardAPIVolumeFile {
 
   // Required: Selects a field of the pod: only annotations, labels, name and namespace are supported.
   optional ObjectFieldSelector fieldRef = 2;
+
+  // Optional: Resource which is the source of metadata to expose via downward API, default is pod.
+  optional string resource = 3;
 }
 
 // DownwardAPIVolumeSource represents a volume containing downward API info.

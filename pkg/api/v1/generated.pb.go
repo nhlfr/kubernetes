@@ -2044,6 +2044,10 @@ func (m *DownwardAPIVolumeFile) MarshalTo(data []byte) (int, error) {
 		return 0, err
 	}
 	i += n27
+	data[i] = 0x1a
+	i++
+	i = encodeVarintGenerated(data, i, uint64(len(m.Resource)))
+	i += copy(data[i:], m.Resource)
 	return i, nil
 }
 
@@ -7990,6 +7994,8 @@ func (m *DownwardAPIVolumeFile) Size() (n int) {
 	n += 1 + l + sovGenerated(uint64(l))
 	l = m.FieldRef.Size()
 	n += 1 + l + sovGenerated(uint64(l))
+	l = len(m.Resource)
+	n += 1 + l + sovGenerated(uint64(l))
 	return n
 }
 
@@ -13900,6 +13906,35 @@ func (m *DownwardAPIVolumeFile) Unmarshal(data []byte) error {
 			if err := m.FieldRef.Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Resource", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Resource = string(data[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -898,7 +898,7 @@ func (plugin *mockVolumePlugin) CanSupport(spec *vol.Spec) bool {
 	return true
 }
 
-func (plugin *mockVolumePlugin) NewMounter(spec *vol.Spec, podRef *api.Pod, opts vol.VolumeOptions) (vol.Mounter, error) {
+func (plugin *mockVolumePlugin) NewMounter(spec *vol.Spec, nodeRef *api.Node, podRef *api.Pod, opts vol.VolumeOptions) (vol.Mounter, error) {
 	return nil, fmt.Errorf("Mounter is not supported by this plugin")
 }
 

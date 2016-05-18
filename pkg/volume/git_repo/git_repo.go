@@ -62,7 +62,7 @@ func (plugin *gitRepoPlugin) CanSupport(spec *volume.Spec) bool {
 	return spec.Volume != nil && spec.Volume.GitRepo != nil
 }
 
-func (plugin *gitRepoPlugin) NewMounter(spec *volume.Spec, pod *api.Pod, opts volume.VolumeOptions) (volume.Mounter, error) {
+func (plugin *gitRepoPlugin) NewMounter(spec *volume.Spec, node *api.Node, pod *api.Pod, opts volume.VolumeOptions) (volume.Mounter, error) {
 	return &gitRepoVolumeMounter{
 		gitRepoVolume: &gitRepoVolume{
 			volName: spec.Name(),

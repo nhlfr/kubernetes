@@ -72,7 +72,12 @@ func (vh *volumeHost) NewWrapperMounter(volName string, spec volume.Spec, pod *a
 		spec.Volume.Name = wrapperVolumeName
 	}
 
-	return vh.kubelet.newVolumeMounterFromPlugins(&spec, pod, opts)
+	node, err := vh.kubelet.getNodeAnyWay()
+	if err != nil {
+		return nil, err
+	}
+
+	return vh.kubelet.newVolumeMounterFromPlugins(&spec, node, pod, opts)
 }
 
 // NewWrapperUnmounter attempts to create a volume unmounter
@@ -132,6 +137,11 @@ func (kl *Kubelet) mountExternalVolumes(pod *api.Pod) (kubecontainer.VolumeMap, 
 			return nil, err
 		}
 
+		node, err := kl.getNodeAnyWay()
+		if err != nil {
+			return nil, err
+		}
+
 		var volSpec *volume.Spec
 		if pod.Spec.Volumes[i].VolumeSource.PersistentVolumeClaim != nil {
 			claimName := pod.Spec.Volumes[i].PersistentVolumeClaim.ClaimName
@@ -146,7 +156,7 @@ func (kl *Kubelet) mountExternalVolumes(pod *api.Pod) (kubecontainer.VolumeMap, 
 			volSpec = volume.NewSpecFromVolume(&pod.Spec.Volumes[i])
 		}
 		// Try to use a plugin for this volume.
-		mounter, err := kl.newVolumeMounterFromPlugins(volSpec, pod, volume.VolumeOptions{RootContext: rootContext})
+		mounter, err := kl.newVolumeMounterFromPlugins(volSpec, node, pod, volume.VolumeOptions{RootContext: rootContext})
 		if err != nil {
 			glog.Errorf("Could not create volume mounter for pod %s: %v", pod.UID, err)
 			return nil, err
@@ -350,12 +360,12 @@ func (kl *Kubelet) applyPersistentVolumeAnnotations(pv *api.PersistentVolume, po
 // newVolumeMounterFromPlugins attempts to find a plugin by volume spec, pod
 // and volume options and then creates a Mounter.
 // Returns a valid Unmounter or an error.
-func (kl *Kubelet) newVolumeMounterFromPlugins(spec *volume.Spec, pod *api.Pod, opts volume.VolumeOptions) (volume.Mounter, error) {
+func (kl *Kubelet) newVolumeMounterFromPlugins(spec *volume.Spec, node *api.Node, pod *api.Pod, opts volume.VolumeOptions) (volume.Mounter, error) {
 	plugin, err := kl.volumePluginMgr.FindPluginBySpec(spec)
 	if err != nil {
 		return nil, fmt.Errorf("can't use volume plugins for %s: %v", spec.Name(), err)
 	}
-	physicalMounter, err := plugin.NewMounter(spec, pod, opts)
+	physicalMounter, err := plugin.NewMounter(spec, node, pod, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate mounter for volume: %s using plugin: %s with a root cause: %v", spec.Name(), plugin.Name(), err)
 	}

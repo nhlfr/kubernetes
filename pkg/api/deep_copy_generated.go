@@ -669,6 +669,7 @@ func DeepCopy_api_DownwardAPIVolumeFile(in DownwardAPIVolumeFile, out *DownwardA
 	if err := DeepCopy_api_ObjectFieldSelector(in.FieldRef, &out.FieldRef, c); err != nil {
 		return err
 	}
+	out.Resource = in.Resource
 	return nil
 }
 

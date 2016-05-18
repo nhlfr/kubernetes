@@ -102,7 +102,7 @@ func (plugin *flexVolumePlugin) getVolumeSource(spec *volume.Spec) *api.FlexVolu
 }
 
 // NewMounter is the mounter routine to build the volume.
-func (plugin *flexVolumePlugin) NewMounter(spec *volume.Spec, pod *api.Pod, _ volume.VolumeOptions) (volume.Mounter, error) {
+func (plugin *flexVolumePlugin) NewMounter(spec *volume.Spec, node *api.Node, pod *api.Pod, _ volume.VolumeOptions) (volume.Mounter, error) {
 	fv := plugin.getVolumeSource(spec)
 	secrets := make(map[string]string)
 	if fv.SecretRef != nil {

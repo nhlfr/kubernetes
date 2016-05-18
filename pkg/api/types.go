@@ -707,6 +707,8 @@ type DownwardAPIVolumeFile struct {
 	Path string `json:"path"`
 	// Required: Selects a field of the pod: only annotations, labels, name and  namespace are supported.
 	FieldRef ObjectFieldSelector `json:"fieldRef"`
+	// Optional: Resource which is the source of metadata to expose via downward API, default is pod.
+	Resource string `json:"resource"`
 }
 
 // AzureFile represents an Azure File Service mount on the host and bind mount to the pod.

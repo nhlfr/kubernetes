@@ -1445,6 +1445,7 @@ func autoConvert_v1_DownwardAPIVolumeFile_To_api_DownwardAPIVolumeFile(in *Downw
 	if err := Convert_v1_ObjectFieldSelector_To_api_ObjectFieldSelector(&in.FieldRef, &out.FieldRef, s); err != nil {
 		return err
 	}
+	out.Resource = in.Resource
 	return nil
 }
 
@@ -1457,6 +1458,7 @@ func autoConvert_api_DownwardAPIVolumeFile_To_v1_DownwardAPIVolumeFile(in *api.D
 	if err := Convert_api_ObjectFieldSelector_To_v1_ObjectFieldSelector(&in.FieldRef, &out.FieldRef, s); err != nil {
 		return err
 	}
+	out.Resource = in.Resource
 	return nil
 }
 

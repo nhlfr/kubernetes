@@ -66,7 +66,7 @@ func (plugin *vsphereVolumePlugin) CanSupport(spec *volume.Spec) bool {
 		(spec.Volume != nil && spec.Volume.VsphereVolume != nil)
 }
 
-func (plugin *vsphereVolumePlugin) NewMounter(spec *volume.Spec, pod *api.Pod, _ volume.VolumeOptions) (volume.Mounter, error) {
+func (plugin *vsphereVolumePlugin) NewMounter(spec *volume.Spec, node *api.Node, pod *api.Pod, _ volume.VolumeOptions) (volume.Mounter, error) {
 	return plugin.newMounterInternal(spec, pod.UID, &VsphereDiskUtil{}, plugin.host.GetMounter())
 }
 

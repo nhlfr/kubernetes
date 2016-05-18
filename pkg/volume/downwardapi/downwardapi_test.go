@@ -85,8 +85,85 @@ func CleanEverything(plugin volume.VolumePlugin, testVolumeName, volumePath stri
 	}
 }
 
-func TestLabels(t *testing.T) {
+func TestNodeLabels(t *testing.T) {
 	var (
+		testNodeUID    = types.UID("test_node_uid")
+		testPodUID     = types.UID("test_pod_uid")
+		testVolumeName = "test_labels"
+		testName       = "test_metadata_name"
+	)
+
+	labels := map[string]string{
+		"key1": "value1",
+		"key2": "value2"}
+
+	clientset := fake.NewSimpleClientset(&api.Node{
+		ObjectMeta: api.ObjectMeta{
+			Name:   testName,
+			Labels: labels,
+		},
+	})
+
+	pluginMgr := volume.VolumePluginMgr{}
+	rootDir, host := newTestHost(t, clientset)
+	defer os.RemoveAll(rootDir)
+	pluginMgr.InitPlugins(ProbeVolumePlugins(), host)
+	plugin, err := pluginMgr.FindPluginByName(downwardAPIPluginName)
+	volumeSpec := &api.Volume{
+		Name: testVolumeName,
+		VolumeSource: api.VolumeSource{
+			DownwardAPI: &api.DownwardAPIVolumeSource{
+				Items: []api.DownwardAPIVolumeFile{
+					{Path: "labels", FieldRef: api.ObjectFieldSelector{
+						FieldPath: "metadata.labels"},
+						Resource: "node"}}}}}
+	if err != nil {
+		t.Errorf("Cant' find the plugin by name")
+	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID, Labels: labels}}
+	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID}}
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
+
+	if err != nil {
+		t.Errorf("Failed to make a new Mounter: %v", err)
+	}
+	if mounter == nil {
+		t.Errorf("Got a nil Mounter")
+	}
+
+	volumePath := mounter.GetPath()
+
+	err = mounter.SetUp(nil)
+	if err != nil {
+		t.Errorf("Failed to setup volume: %v", err)
+	}
+
+	// downwardAPI volume should create its own empty wrapper path
+	podWrapperMetadataDir := fmt.Sprintf("%v/pods/%v/plugins/kubernetes.io~empty-dir/wrapped_%v", rootDir, testPodUID, testVolumeName)
+
+	if _, err := os.Stat(podWrapperMetadataDir); err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("SetUp() failed, empty-dir wrapper path was not created: %s", podWrapperMetadataDir)
+		} else {
+			t.Errorf("SetUp failed: %v", err)
+		}
+	}
+
+	var data []byte
+	data, err = ioutil.ReadFile(path.Join(volumePath, "labels"))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if sortLines(string(data)) != sortLines(formatMap(labels)) {
+		t.Errorf("Found `%s` expected %s", data, formatMap(labels))
+	}
+
+	CleanEverything(plugin, testVolumeName, volumePath, testPodUID, t)
+}
+
+func TestPodLabels(t *testing.T) {
+	var (
+		testNodeUID    = types.UID("test_node_uid")
 		testPodUID     = types.UID("test_pod_uid")
 		testVolumeName = "test_labels"
 		testNamespace  = "test_metadata_namespace"
@@ -122,8 +199,9 @@ func TestLabels(t *testing.T) {
 	if err != nil {
 		t.Errorf("Can't find the plugin by name")
 	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID}}
 	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID, Labels: labels}}
-	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), pod, volume.VolumeOptions{})
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
 
 	if err != nil {
 		t.Errorf("Failed to make a new Mounter: %v", err)
@@ -162,8 +240,85 @@ func TestLabels(t *testing.T) {
 	CleanEverything(plugin, testVolumeName, volumePath, testPodUID, t)
 }
 
-func TestAnnotations(t *testing.T) {
+func TestNodeAnnotations(t *testing.T) {
 	var (
+		testNodeUID    = types.UID("test_node_uid")
+		testPodUID     = types.UID("test_pod_uid")
+		testVolumeName = "test_annotations"
+		testName       = "test_metadata_name"
+	)
+
+	annotations := map[string]string{
+		"a1": "value1",
+		"a2": "value2"}
+
+	volumeSpec := &api.Volume{
+		Name: testVolumeName,
+		VolumeSource: api.VolumeSource{
+			DownwardAPI: &api.DownwardAPIVolumeSource{
+				Items: []api.DownwardAPIVolumeFile{
+					{Path: "annotations", FieldRef: api.ObjectFieldSelector{
+						FieldPath: "metadata.annotations"},
+						Resource: "node"}}}}}
+
+	clientset := fake.NewSimpleClientset(&api.Node{
+		ObjectMeta: api.ObjectMeta{
+			Name:        testName,
+			Annotations: annotations,
+		},
+	})
+
+	pluginMgr := volume.VolumePluginMgr{}
+	tmpDir, host := newTestHost(t, clientset)
+	defer os.RemoveAll(tmpDir)
+	pluginMgr.InitPlugins(ProbeVolumePlugins(), host)
+	plugin, err := pluginMgr.FindPluginByName(downwardAPIPluginName)
+	if err != nil {
+		t.Errorf("Can't find the plugin by name")
+	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID, Annotations: annotations}}
+	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID}}
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
+	if err != nil {
+		t.Errorf("Failed to make a new Mounter: %v", err)
+	}
+	if mounter == nil {
+		t.Error("Got a nil Mounter")
+	}
+
+	volumePath := mounter.GetPath()
+
+	err = mounter.SetUp(nil)
+	if err != nil {
+		t.Errorf("Failed to setup volume: %v", err)
+	}
+
+	// downwardAPI volume should create its own empty wrapper path
+	podWrapperMetadataDir := fmt.Sprintf("%v/pods/%v/plugins/kubernetes.io~empty-dir/wrapped_%v", tmpDir, testPodUID, testVolumeName)
+
+	if _, err := os.Stat(podWrapperMetadataDir); err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("SetUp() failed, empty-dir wrapper path was not created: %s", podWrapperMetadataDir)
+		} else {
+			t.Errorf("SetUp failed: %v", err)
+		}
+	}
+
+	var data []byte
+	data, err = ioutil.ReadFile(path.Join(volumePath, "annotations"))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	if sortLines(string(data)) != sortLines(formatMap(annotations)) {
+		t.Errorf("Found `%s` expected %s", data, formatMap(annotations))
+	}
+	CleanEverything(plugin, testVolumeName, volumePath, testPodUID, t)
+}
+
+func TestPodAnnotations(t *testing.T) {
+	var (
+		testNodeUID    = types.UID("test_node_uid")
 		testPodUID     = types.UID("test_pod_uid")
 		testVolumeName = "test_annotations"
 		testNamespace  = "test_metadata_namespace"
@@ -200,8 +355,9 @@ func TestAnnotations(t *testing.T) {
 	if err != nil {
 		t.Errorf("Can't find the plugin by name")
 	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID}}
 	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID, Annotations: annotations}}
-	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), pod, volume.VolumeOptions{})
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
 	if err != nil {
 		t.Errorf("Failed to make a new Mounter: %v", err)
 	}
@@ -214,6 +370,17 @@ func TestAnnotations(t *testing.T) {
 	err = mounter.SetUp(nil)
 	if err != nil {
 		t.Errorf("Failed to setup volume: %v", err)
+	}
+
+	// downwardAPI volume should create its own empty wrapper path
+	podWrapperMetadataDir := fmt.Sprintf("%v/pods/%v/plugins/kubernetes.io~empty-dir/wrapped_%v", tmpDir, testPodUID, testVolumeName)
+
+	if _, err := os.Stat(podWrapperMetadataDir); err != nil {
+		if os.IsNotExist(err) {
+			t.Errorf("SetUp() failed, empty-dir wrapper path was not created: %s", podWrapperMetadataDir)
+		} else {
+			t.Errorf("SetUp failed: %v", err)
+		}
 	}
 
 	var data []byte
@@ -231,6 +398,7 @@ func TestAnnotations(t *testing.T) {
 
 func TestName(t *testing.T) {
 	var (
+		testNodeUID    = types.UID("test_node_uid")
 		testPodUID     = types.UID("test_pod_uid")
 		testVolumeName = "test_name"
 		testNamespace  = "test_metadata_namespace"
@@ -262,8 +430,9 @@ func TestName(t *testing.T) {
 	if err != nil {
 		t.Errorf("Can't find the plugin by name")
 	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID}}
 	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID, Name: testName}}
-	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), pod, volume.VolumeOptions{})
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
 	if err != nil {
 		t.Errorf("Failed to make a new Mounter: %v", err)
 	}
@@ -294,6 +463,7 @@ func TestName(t *testing.T) {
 
 func TestNamespace(t *testing.T) {
 	var (
+		testNodeUID    = types.UID("test_node_uid")
 		testPodUID     = types.UID("test_pod_uid")
 		testVolumeName = "test_namespace"
 		testNamespace  = "test_metadata_namespace"
@@ -325,8 +495,9 @@ func TestNamespace(t *testing.T) {
 	if err != nil {
 		t.Errorf("Can't find the plugin by name")
 	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID}}
 	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID, Namespace: testNamespace}}
-	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), pod, volume.VolumeOptions{})
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
 	if err != nil {
 		t.Errorf("Failed to make a new Mounter: %v", err)
 	}
@@ -356,6 +527,7 @@ func TestNamespace(t *testing.T) {
 
 func TestWriteTwiceNoUpdate(t *testing.T) {
 	var (
+		testNodeUID    = types.UID("test_node_uid")
 		testPodUID     = types.UID("test_pod_uid")
 		testVolumeName = "test_write_twice_no_update"
 		testNamespace  = "test_metadata_namespace"
@@ -390,8 +562,9 @@ func TestWriteTwiceNoUpdate(t *testing.T) {
 	if err != nil {
 		t.Errorf("Can't find the plugin by name")
 	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID}}
 	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID, Labels: labels}}
-	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), pod, volume.VolumeOptions{})
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
 
 	if err != nil {
 		t.Errorf("Failed to make a new Mounter: %v", err)
@@ -442,6 +615,7 @@ func TestWriteTwiceNoUpdate(t *testing.T) {
 
 func TestWriteTwiceWithUpdate(t *testing.T) {
 	var (
+		testNodeUID    = types.UID("test_node_uid")
 		testPodUID     = types.UID("test_pod_uid")
 		testVolumeName = "test_write_twice_with_update"
 		testNamespace  = "test_metadata_namespace"
@@ -476,8 +650,9 @@ func TestWriteTwiceWithUpdate(t *testing.T) {
 	if err != nil {
 		t.Errorf("Can't find the plugin by name")
 	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID}}
 	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID, Labels: labels}}
-	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), pod, volume.VolumeOptions{})
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
 
 	if err != nil {
 		t.Errorf("Failed to make a new Mounter: %v", err)
@@ -542,6 +717,7 @@ func TestWriteTwiceWithUpdate(t *testing.T) {
 
 func TestWriteWithUnixPath(t *testing.T) {
 	var (
+		testNodeUID    = types.UID("test_node_uid")
 		testPodUID     = types.UID("test_pod_uid")
 		testVolumeName = "test_write_with_unix_path"
 		testNamespace  = "test_metadata_namespace"
@@ -584,8 +760,9 @@ func TestWriteWithUnixPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("Can't find the plugin by name")
 	}
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID}}
 	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID, Labels: labels, Annotations: annotations}}
-	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), pod, volume.VolumeOptions{})
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
 
 	if err != nil {
 		t.Errorf("Failed to make a new Mounter: %v", err)
@@ -622,6 +799,7 @@ func TestWriteWithUnixPath(t *testing.T) {
 
 func TestWriteWithUnixPathBadPath(t *testing.T) {
 	var (
+		testNodeUID    = types.UID("test_node_uid")
 		testPodUID     = types.UID("test_pod_uid")
 		testVolumeName = "test_write_with_unix_path"
 		testNamespace  = "test_metadata_namespace"
@@ -666,8 +844,9 @@ func TestWriteWithUnixPathBadPath(t *testing.T) {
 		},
 	}
 
+	node := &api.Node{ObjectMeta: api.ObjectMeta{UID: testNodeUID}}
 	pod := &api.Pod{ObjectMeta: api.ObjectMeta{UID: testPodUID, Labels: labels}}
-	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), pod, volume.VolumeOptions{})
+	mounter, err := plugin.NewMounter(volume.NewSpecFromVolume(volumeSpec), node, pod, volume.VolumeOptions{})
 	if err != nil {
 		t.Fatalf("Failed to make a new Mounter: %v", err)
 	} else if mounter == nil {

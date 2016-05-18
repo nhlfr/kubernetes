@@ -7032,6 +7032,10 @@
      "fieldRef": {
       "$ref": "v1.ObjectFieldSelector",
       "description": "Required: Selects a field of the pod: only annotations, labels, name and namespace are supported."
+     },
+     "resource": {
+      "type": "string",
+      "description": "Optional: Resource which is the source of metadata to expose via downward API, default is pod."
      }
     }
    },

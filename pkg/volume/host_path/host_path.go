@@ -93,7 +93,7 @@ func (plugin *hostPathPlugin) GetAccessModes() []api.PersistentVolumeAccessMode 
 	}
 }
 
-func (plugin *hostPathPlugin) NewMounter(spec *volume.Spec, pod *api.Pod, _ volume.VolumeOptions) (volume.Mounter, error) {
+func (plugin *hostPathPlugin) NewMounter(spec *volume.Spec, node *api.Node, pod *api.Pod, _ volume.VolumeOptions) (volume.Mounter, error) {
 	if spec.Volume != nil && spec.Volume.HostPath != nil {
 		path := spec.Volume.HostPath.Path
 		return &hostPathMounter{
