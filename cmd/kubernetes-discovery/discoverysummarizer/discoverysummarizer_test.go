@@ -47,7 +47,7 @@ func testResponse(t *testing.T, serverURL, path string, expectedStatusCode int) 
 
 func runDiscoverySummarizer(t *testing.T) string {
 	configFilePath := "../config.json"
-	port := "9090"
+	port := "9091"
 	serverURL := "http://localhost:" + port
 	s, err := NewDiscoverySummarizer(configFilePath)
 	if err != nil {
