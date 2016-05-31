@@ -588,10 +588,6 @@ func (b *Builder) visitorResult() *Result {
 			selectorNamespace := b.namespace
 			if mapping.Scope.Name() != meta.RESTScopeNameNamespace {
 				selectorNamespace = ""
-			} else {
-				if len(b.namespace) == 0 {
-					return &Result{singular: isSingular, err: fmt.Errorf("namespace may not be empty when retrieving a resource by name")}
-				}
 			}
 
 			info := NewInfo(client, mapping, selectorNamespace, tuple.Name, b.export)
@@ -635,10 +631,6 @@ func (b *Builder) visitorResult() *Result {
 		selectorNamespace := b.namespace
 		if mapping.Scope.Name() != meta.RESTScopeNameNamespace {
 			selectorNamespace = ""
-		} else {
-			if len(b.namespace) == 0 {
-				return &Result{singular: isSingular, err: fmt.Errorf("namespace may not be empty when retrieving a resource by name")}
-			}
 		}
 
 		visitors := []Visitor{}
