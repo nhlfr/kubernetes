@@ -126,6 +126,9 @@ func FuzzerFor(t *testing.T, version unversioned.GroupVersion, src rand.Source) 
 			if s.SecurityContext == nil {
 				s.SecurityContext = new(api.PodSecurityContext)
 			}
+
+			s.Notifications = make(map[string]string)
+			s.Notifications[c.RandString()] = c.RandString()
 		},
 		func(j *api.PodPhase, c fuzz.Continue) {
 			statuses := []api.PodPhase{api.PodPending, api.PodRunning, api.PodFailed, api.PodUnknown}

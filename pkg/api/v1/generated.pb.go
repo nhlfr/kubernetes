@@ -105,6 +105,7 @@ limitations under the License.
 		NodeSpec
 		NodeStatus
 		NodeSystemInfo
+		Notification
 		ObjectFieldSelector
 		ObjectMeta
 		ObjectReference
@@ -128,6 +129,7 @@ limitations under the License.
 		PodExecOptions
 		PodList
 		PodLogOptions
+		PodNotifyOptions
 		PodProxyOptions
 		PodSecurityContext
 		PodSpec
@@ -514,6 +516,10 @@ func (m *NodeSystemInfo) Reset()         { *m = NodeSystemInfo{} }
 func (m *NodeSystemInfo) String() string { return proto.CompactTextString(m) }
 func (*NodeSystemInfo) ProtoMessage()    {}
 
+func (m *Notification) Reset()         { *m = Notification{} }
+func (m *Notification) String() string { return proto.CompactTextString(m) }
+func (*Notification) ProtoMessage()    {}
+
 func (m *ObjectFieldSelector) Reset()         { *m = ObjectFieldSelector{} }
 func (m *ObjectFieldSelector) String() string { return proto.CompactTextString(m) }
 func (*ObjectFieldSelector) ProtoMessage()    {}
@@ -605,6 +611,10 @@ func (*PodList) ProtoMessage()    {}
 func (m *PodLogOptions) Reset()         { *m = PodLogOptions{} }
 func (m *PodLogOptions) String() string { return proto.CompactTextString(m) }
 func (*PodLogOptions) ProtoMessage()    {}
+
+func (m *PodNotifyOptions) Reset()         { *m = PodNotifyOptions{} }
+func (m *PodNotifyOptions) String() string { return proto.CompactTextString(m) }
+func (*PodNotifyOptions) ProtoMessage()    {}
 
 func (m *PodProxyOptions) Reset()         { *m = PodProxyOptions{} }
 func (m *PodProxyOptions) String() string { return proto.CompactTextString(m) }
@@ -871,6 +881,7 @@ func init() {
 	proto.RegisterType((*NodeSpec)(nil), "k8s.io.kubernetes.pkg.api.v1.NodeSpec")
 	proto.RegisterType((*NodeStatus)(nil), "k8s.io.kubernetes.pkg.api.v1.NodeStatus")
 	proto.RegisterType((*NodeSystemInfo)(nil), "k8s.io.kubernetes.pkg.api.v1.NodeSystemInfo")
+	proto.RegisterType((*Notification)(nil), "k8s.io.kubernetes.pkg.api.v1.Notification")
 	proto.RegisterType((*ObjectFieldSelector)(nil), "k8s.io.kubernetes.pkg.api.v1.ObjectFieldSelector")
 	proto.RegisterType((*ObjectMeta)(nil), "k8s.io.kubernetes.pkg.api.v1.ObjectMeta")
 	proto.RegisterType((*ObjectReference)(nil), "k8s.io.kubernetes.pkg.api.v1.ObjectReference")
@@ -894,6 +905,7 @@ func init() {
 	proto.RegisterType((*PodExecOptions)(nil), "k8s.io.kubernetes.pkg.api.v1.PodExecOptions")
 	proto.RegisterType((*PodList)(nil), "k8s.io.kubernetes.pkg.api.v1.PodList")
 	proto.RegisterType((*PodLogOptions)(nil), "k8s.io.kubernetes.pkg.api.v1.PodLogOptions")
+	proto.RegisterType((*PodNotifyOptions)(nil), "k8s.io.kubernetes.pkg.api.v1.PodNotifyOptions")
 	proto.RegisterType((*PodProxyOptions)(nil), "k8s.io.kubernetes.pkg.api.v1.PodProxyOptions")
 	proto.RegisterType((*PodSecurityContext)(nil), "k8s.io.kubernetes.pkg.api.v1.PodSecurityContext")
 	proto.RegisterType((*PodSpec)(nil), "k8s.io.kubernetes.pkg.api.v1.PodSpec")
@@ -4279,6 +4291,32 @@ func (m *NodeSystemInfo) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *Notification) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *Notification) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintGenerated(data, i, uint64(len(m.Name)))
+	i += copy(data[i:], m.Name)
+	data[i] = 0x12
+	i++
+	i = encodeVarintGenerated(data, i, uint64(len(m.Signal)))
+	i += copy(data[i:], m.Signal)
+	return i, nil
+}
+
 func (m *ObjectFieldSelector) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -5548,6 +5586,32 @@ func (m *PodLogOptions) MarshalTo(data []byte) (int, error) {
 	return i, nil
 }
 
+func (m *PodNotifyOptions) Marshal() (data []byte, err error) {
+	size := m.Size()
+	data = make([]byte, size)
+	n, err := m.MarshalTo(data)
+	if err != nil {
+		return nil, err
+	}
+	return data[:n], nil
+}
+
+func (m *PodNotifyOptions) MarshalTo(data []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	data[i] = 0xa
+	i++
+	i = encodeVarintGenerated(data, i, uint64(len(m.Container)))
+	i += copy(data[i:], m.Container)
+	data[i] = 0x12
+	i++
+	i = encodeVarintGenerated(data, i, uint64(len(m.NotificationName)))
+	i += copy(data[i:], m.NotificationName)
+	return i, nil
+}
+
 func (m *PodProxyOptions) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -5769,6 +5833,20 @@ func (m *PodSpec) MarshalTo(data []byte) (int, error) {
 	i++
 	i = encodeVarintGenerated(data, i, uint64(len(m.Subdomain)))
 	i += copy(data[i:], m.Subdomain)
+	if len(m.Notifications) > 0 {
+		for _, msg := range m.Notifications {
+			data[i] = 0x92
+			i++
+			data[i] = 0x1
+			i++
+			i = encodeVarintGenerated(data, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(data[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
 	return i, nil
 }
 
@@ -8976,6 +9054,16 @@ func (m *NodeSystemInfo) Size() (n int) {
 	return n
 }
 
+func (m *Notification) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Name)
+	n += 1 + l + sovGenerated(uint64(l))
+	l = len(m.Signal)
+	n += 1 + l + sovGenerated(uint64(l))
+	return n
+}
+
 func (m *ObjectFieldSelector) Size() (n int) {
 	var l int
 	_ = l
@@ -9438,6 +9526,16 @@ func (m *PodLogOptions) Size() (n int) {
 	return n
 }
 
+func (m *PodNotifyOptions) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Container)
+	n += 1 + l + sovGenerated(uint64(l))
+	l = len(m.NotificationName)
+	n += 1 + l + sovGenerated(uint64(l))
+	return n
+}
+
 func (m *PodProxyOptions) Size() (n int) {
 	var l int
 	_ = l
@@ -9526,6 +9624,12 @@ func (m *PodSpec) Size() (n int) {
 	n += 2 + l + sovGenerated(uint64(l))
 	l = len(m.Subdomain)
 	n += 2 + l + sovGenerated(uint64(l))
+	if len(m.Notifications) > 0 {
+		for _, e := range m.Notifications {
+			l = e.Size()
+			n += 2 + l + sovGenerated(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -22195,6 +22299,114 @@ func (m *NodeSystemInfo) Unmarshal(data []byte) error {
 	}
 	return nil
 }
+func (m *Notification) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenerated
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Notification: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Notification: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signal", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signal = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenerated(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *ObjectFieldSelector) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -26704,6 +26916,114 @@ func (m *PodLogOptions) Unmarshal(data []byte) error {
 	}
 	return nil
 }
+func (m *PodNotifyOptions) Unmarshal(data []byte) error {
+	l := len(data)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenerated
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := data[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PodNotifyOptions: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PodNotifyOptions: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Container", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Container = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NotificationName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NotificationName = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenerated(data[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *PodProxyOptions) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -27515,6 +27835,37 @@ func (m *PodSpec) Unmarshal(data []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Subdomain = string(data[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 18:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Notifications", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := data[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Notifications = append(m.Notifications, Notification{})
+			if err := m.Notifications[len(m.Notifications)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

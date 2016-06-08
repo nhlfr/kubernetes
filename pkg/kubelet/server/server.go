@@ -162,6 +162,7 @@ type HostInterface interface {
 	RunInContainer(name string, uid types.UID, container string, cmd []string) ([]byte, error)
 	ExecInContainer(name string, uid types.UID, container string, cmd []string, in io.Reader, out, err io.WriteCloser, tty bool) error
 	AttachContainer(name string, uid types.UID, container string, in io.Reader, out, err io.WriteCloser, tty bool) error
+	NotifyContainer(name string, uid types.UID, container, notificationName string) error
 	GetKubeletContainerLogs(podFullName, containerName string, logOptions *api.PodLogOptions, stdout, stderr io.Writer) error
 	ServeLogs(w http.ResponseWriter, req *http.Request)
 	PortForward(name string, uid types.UID, port uint16, stream io.ReadWriteCloser) error
@@ -313,6 +314,17 @@ func (s *Server) InstallDebuggingHandlers() {
 	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}/{containerName}").
 		To(s.getAttach).
 		Operation("getAttach"))
+	s.restfulCont.Add(ws)
+
+	ws = new(restful.WebService)
+	ws.
+		Path("/notify")
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{containerName}").
+		To(s.getNotify).
+		Operation("getNotify"))
+	ws.Route(ws.POST("/{podNamespace}/{podID}/{uid}/{containerName}").
+		To(s.getNotify).
+		Operation("getNotify"))
 	s.restfulCont.Add(ws)
 
 	ws = new(restful.WebService)
@@ -599,6 +611,23 @@ func (s *Server) getExec(request *restful.Request, response *restful.Response) {
 		s.host.StreamingConnectionIdleTimeout(),
 		remotecommand.DefaultStreamCreationTimeout,
 		remotecommand.SupportedStreamingProtocols)
+}
+
+// getNotify handles requests to send a signal to container.
+func (s *Server) getNotify(request *restful.Request, response *restful.Response) {
+	podNamespace, podID, uid, container := getContainerCoordinates(request)
+	pod, ok := s.host.GetPodByName(podNamespace, podID)
+	if !ok {
+		response.WriteError(http.StatusNotFound, fmt.Errorf("pod does not exist"))
+		return
+	}
+
+	notification := request.Request.URL.Query().Get(api.NotifyNameParam)
+
+	err := s.host.NotifyContainer(kubecontainer.GetPodFullName(pod), uid, container, notification)
+	if err != nil {
+		response.WriteError(http.StatusInternalServerError, err)
+	}
 }
 
 // getRun handles requests to run a command inside a container.

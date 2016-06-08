@@ -1353,6 +1353,15 @@ message NodeSystemInfo {
   optional string architecture = 10;
 }
 
+// Notification is a mapping which exposes POSIX signal as a user-friendly name.
+message Notification {
+  // User-friendly name of notification.
+  optional string name = 1;
+
+  // POSIX signal to which the notification is referring.
+  optional string signal = 2;
+}
+
 // ObjectFieldSelector selects an APIVersioned field of an object.
 message ObjectFieldSelector {
   // Version of the schema the FieldPath is written in terms of, defaults to "v1".
@@ -1991,6 +2000,16 @@ message PodLogOptions {
   optional int64 limitBytes = 8;
 }
 
+// PodNotifyOptions is the query options to a Pod's remote signal notification.
+message PodNotifyOptions {
+  // The container to which send signal.
+  // Defaults to only container if there is only one container in the pod.
+  optional string container = 1;
+
+  // Name of notification to send.
+  optional string notificationName = 2;
+}
+
 // PodProxyOptions is the query options to a Pod's proxy call.
 message PodProxyOptions {
   // Path is the URL path to use for the current proxy request to pod.
@@ -2126,6 +2145,9 @@ message PodSpec {
   // If specified, the fully qualified Pod hostname will be "<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>".
   // If not specified, the pod will not have a domainname at all.
   optional string subdomain = 17;
+
+  // List of notifications defined in the pod.
+  repeated Notification notifications = 18;
 }
 
 // PodStatus represents information about the status of a pod. Status may trail the actual

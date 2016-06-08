@@ -138,6 +138,7 @@ func init() {
 		DeepCopy_api_PodExecOptions,
 		DeepCopy_api_PodList,
 		DeepCopy_api_PodLogOptions,
+		DeepCopy_api_PodNotifyOptions,
 		DeepCopy_api_PodProxyOptions,
 		DeepCopy_api_PodSecurityContext,
 		DeepCopy_api_PodSpec,
@@ -2248,6 +2249,15 @@ func DeepCopy_api_PodLogOptions(in PodLogOptions, out *PodLogOptions, c *convers
 	return nil
 }
 
+func DeepCopy_api_PodNotifyOptions(in PodNotifyOptions, out *PodNotifyOptions, c *conversion.Cloner) error {
+	if err := unversioned.DeepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
+		return err
+	}
+	out.Container = in.Container
+	out.NotificationName = in.NotificationName
+	return nil
+}
+
 func DeepCopy_api_PodProxyOptions(in PodProxyOptions, out *PodProxyOptions, c *conversion.Cloner) error {
 	if err := unversioned.DeepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
 		return err
@@ -2383,6 +2393,15 @@ func DeepCopy_api_PodSpec(in PodSpec, out *PodSpec, c *conversion.Cloner) error 
 	}
 	out.Hostname = in.Hostname
 	out.Subdomain = in.Subdomain
+	if in.Notifications != nil {
+		in, out := in.Notifications, &out.Notifications
+		*out = make(map[string]string)
+		for key, val := range in {
+			(*out)[key] = val
+		}
+	} else {
+		out.Notifications = nil
+	}
 	return nil
 }
 

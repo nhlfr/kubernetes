@@ -112,6 +112,7 @@ func init() {
 		DeepCopy_v1_NodeSpec,
 		DeepCopy_v1_NodeStatus,
 		DeepCopy_v1_NodeSystemInfo,
+		DeepCopy_v1_Notification,
 		DeepCopy_v1_ObjectFieldSelector,
 		DeepCopy_v1_ObjectMeta,
 		DeepCopy_v1_ObjectReference,
@@ -135,6 +136,7 @@ func init() {
 		DeepCopy_v1_PodExecOptions,
 		DeepCopy_v1_PodList,
 		DeepCopy_v1_PodLogOptions,
+		DeepCopy_v1_PodNotifyOptions,
 		DeepCopy_v1_PodProxyOptions,
 		DeepCopy_v1_PodSecurityContext,
 		DeepCopy_v1_PodSpec,
@@ -1592,6 +1594,12 @@ func DeepCopy_v1_NodeSystemInfo(in NodeSystemInfo, out *NodeSystemInfo, c *conve
 	return nil
 }
 
+func DeepCopy_v1_Notification(in Notification, out *Notification, c *conversion.Cloner) error {
+	out.Name = in.Name
+	out.Signal = in.Signal
+	return nil
+}
+
 func DeepCopy_v1_ObjectFieldSelector(in ObjectFieldSelector, out *ObjectFieldSelector, c *conversion.Cloner) error {
 	out.APIVersion = in.APIVersion
 	out.FieldPath = in.FieldPath
@@ -2195,6 +2203,15 @@ func DeepCopy_v1_PodLogOptions(in PodLogOptions, out *PodLogOptions, c *conversi
 	return nil
 }
 
+func DeepCopy_v1_PodNotifyOptions(in PodNotifyOptions, out *PodNotifyOptions, c *conversion.Cloner) error {
+	if err := unversioned.DeepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
+		return err
+	}
+	out.Container = in.Container
+	out.NotificationName = in.NotificationName
+	return nil
+}
+
 func DeepCopy_v1_PodProxyOptions(in PodProxyOptions, out *PodProxyOptions, c *conversion.Cloner) error {
 	if err := unversioned.DeepCopy_unversioned_TypeMeta(in.TypeMeta, &out.TypeMeta, c); err != nil {
 		return err
@@ -2331,6 +2348,17 @@ func DeepCopy_v1_PodSpec(in PodSpec, out *PodSpec, c *conversion.Cloner) error {
 	}
 	out.Hostname = in.Hostname
 	out.Subdomain = in.Subdomain
+	if in.Notifications != nil {
+		in, out := in.Notifications, &out.Notifications
+		*out = make([]Notification, len(in))
+		for i := range in {
+			if err := DeepCopy_v1_Notification(in[i], &(*out)[i], c); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Notifications = nil
+	}
 	return nil
 }
 

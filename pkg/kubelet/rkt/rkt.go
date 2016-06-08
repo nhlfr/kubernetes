@@ -1979,6 +1979,10 @@ func (r *Runtime) AttachContainer(containerID kubecontainer.ContainerID, stdin i
 	return fmt.Errorf("unimplemented")
 }
 
+func (r *Runtime) KillContainer(containerID kubecontainer.ContainerID, signal string) error {
+	return fmt.Errorf("unimplemented")
+}
+
 // Note: In rkt, the container ID is in the form of "UUID:appName", where UUID is
 // the rkt UUID, and appName is the container name.
 // TODO(yifan): If the rkt is using lkvm as the stage1 image, then this function will fail.

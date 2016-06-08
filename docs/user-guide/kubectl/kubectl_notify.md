@@ -32,5 +32,5 @@ repository to reduce the need for rebases. Please run hack/generate-docs.sh to
 populate this file.
 
 <!-- BEGIN MUNGE: GENERATED_ANALYTICS -->
-[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/user-guide/kubectl/kubectl_config_set-context.md?pixel)]()
+[![Analytics](https://kubernetes-site.appspot.com/UA-36037335-10/GitHub/docs/user-guide/kubectl/kubectl_notify.md?pixel)]()
 <!-- END MUNGE: GENERATED_ANALYTICS -->

@@ -371,6 +371,8 @@ func streamParams(params url.Values, opts runtime.Object) error {
 		if opts.TTY {
 			params.Add(api.ExecTTYParam, "1")
 		}
+	case *api.PodNotifyOptions:
+		params.Add("notificationName", opts.NotificationName)
 	default:
 		return fmt.Errorf("Unknown object for streaming: %v", opts)
 	}
@@ -399,6 +401,18 @@ func ExecLocation(
 	opts *api.PodExecOptions,
 ) (*url.URL, http.RoundTripper, error) {
 	return streamLocation(getter, connInfo, ctx, name, opts, opts.Container, "exec")
+}
+
+// NotifyLocation returns the notify URL for a pod container. If opts.Container is blank
+// and only one container is present in the pod, that container is used.
+func NotifyLocation(
+	getter ResourceGetter,
+	connInfo client.ConnectionInfoGetter,
+	ctx api.Context,
+	name string,
+	opts *api.PodNotifyOptions,
+) (*url.URL, http.RoundTripper, error) {
+	return streamLocation(getter, connInfo, ctx, name, opts, opts.Container, "notify")
 }
 
 func streamLocation(

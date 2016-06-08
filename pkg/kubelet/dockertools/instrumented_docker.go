@@ -205,6 +205,15 @@ func (in instrumentedDockerInterface) AttachToContainer(id string, opts dockerty
 	return err
 }
 
+func (in instrumentedDockerInterface) KillContainer(id, signal string) error {
+	const operation = "kill"
+	defer recordOperation(operation, time.Now())
+
+	err := in.client.KillContainer(id, signal)
+	recordError(operation, err)
+	return err
+}
+
 func (in instrumentedDockerInterface) ImageHistory(id string) ([]dockertypes.ImageHistory, error) {
 	const operation = "image_history"
 	defer recordOperation(operation, time.Now())

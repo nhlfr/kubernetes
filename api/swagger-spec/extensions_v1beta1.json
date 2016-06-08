@@ -7150,6 +7150,13 @@
      "subdomain": {
       "type": "string",
       "description": "If specified, the fully qualified Pod hostname will be \"\u003chostname\u003e.\u003csubdomain\u003e.\u003cpod namespace\u003e.svc.\u003ccluster domain\u003e\". If not specified, the pod will not have a domainname at all."
+     },
+     "notifications": {
+      "type": "array",
+      "items": {
+       "$ref": "v1.Notification"
+      },
+      "description": "List of notifications defined in the pod."
      }
     }
    },
@@ -8286,6 +8293,24 @@
       "type": "integer",
       "format": "int64",
       "description": "A special supplemental group that applies to all containers in a pod. Some volume types allow the Kubelet to change the ownership of that volume to be owned by the pod:\n\n1. The owning GID will be the FSGroup 2. The setgid bit is set (new files created in the volume will be owned by FSGroup) 3. The permission bits are OR'd with rw-rw "
+     }
+    }
+   },
+   "v1.Notification": {
+    "id": "v1.Notification",
+    "description": "Notification is a mapping which exposes POSIX signal as a user-friendly name.",
+    "required": [
+     "name",
+     "signal"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "description": "User-friendly name of notification."
+     },
+     "signal": {
+      "type": "string",
+      "description": "POSIX signal to which the notification is referring."
      }
     }
    },

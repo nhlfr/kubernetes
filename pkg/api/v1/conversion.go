@@ -389,6 +389,16 @@ func Convert_api_PodSpec_To_v1_PodSpec(in *api.PodSpec, out *PodSpec, s conversi
 	} else {
 		out.Containers = nil
 	}
+	if in.Notifications != nil {
+		out.Notifications = make([]Notification, len(in.Notifications))
+		for name, signal := range in.Notifications {
+			if len(name) != 0 && len(signal) != 0 {
+				out.Notifications = append(out.Notifications, Notification{Name: name, Signal: signal})
+			}
+		}
+	} else {
+		out.Notifications = nil
+	}
 
 	out.RestartPolicy = RestartPolicy(in.RestartPolicy)
 	out.TerminationGracePeriodSeconds = in.TerminationGracePeriodSeconds
@@ -458,6 +468,16 @@ func Convert_v1_PodSpec_To_api_PodSpec(in *PodSpec, out *api.PodSpec, s conversi
 		}
 	} else {
 		out.Containers = nil
+	}
+	if in.Notifications != nil {
+		out.Notifications = make(map[string]string)
+		for _, notification := range in.Notifications {
+			if len(notification.Name) != 0 && len(notification.Signal) != 0 {
+				out.Notifications[notification.Name] = notification.Signal
+			}
+		}
+	} else {
+		out.Notifications = nil
 	}
 	out.RestartPolicy = api.RestartPolicy(in.RestartPolicy)
 	out.TerminationGracePeriodSeconds = in.TerminationGracePeriodSeconds

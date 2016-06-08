@@ -235,6 +235,8 @@ func init() {
 		Convert_api_PodList_To_v1_PodList,
 		Convert_v1_PodLogOptions_To_api_PodLogOptions,
 		Convert_api_PodLogOptions_To_v1_PodLogOptions,
+		Convert_v1_PodNotifyOptions_To_api_PodNotifyOptions,
+		Convert_api_PodNotifyOptions_To_v1_PodNotifyOptions,
 		Convert_v1_PodProxyOptions_To_api_PodProxyOptions,
 		Convert_api_PodProxyOptions_To_v1_PodProxyOptions,
 		Convert_v1_PodSecurityContext_To_api_PodSecurityContext,
@@ -4743,6 +4745,32 @@ func Convert_api_PodLogOptions_To_v1_PodLogOptions(in *api.PodLogOptions, out *P
 	return autoConvert_api_PodLogOptions_To_v1_PodLogOptions(in, out, s)
 }
 
+func autoConvert_v1_PodNotifyOptions_To_api_PodNotifyOptions(in *PodNotifyOptions, out *api.PodNotifyOptions, s conversion.Scope) error {
+	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
+		return err
+	}
+	out.Container = in.Container
+	out.NotificationName = in.NotificationName
+	return nil
+}
+
+func Convert_v1_PodNotifyOptions_To_api_PodNotifyOptions(in *PodNotifyOptions, out *api.PodNotifyOptions, s conversion.Scope) error {
+	return autoConvert_v1_PodNotifyOptions_To_api_PodNotifyOptions(in, out, s)
+}
+
+func autoConvert_api_PodNotifyOptions_To_v1_PodNotifyOptions(in *api.PodNotifyOptions, out *PodNotifyOptions, s conversion.Scope) error {
+	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
+		return err
+	}
+	out.Container = in.Container
+	out.NotificationName = in.NotificationName
+	return nil
+}
+
+func Convert_api_PodNotifyOptions_To_v1_PodNotifyOptions(in *api.PodNotifyOptions, out *PodNotifyOptions, s conversion.Scope) error {
+	return autoConvert_api_PodNotifyOptions_To_v1_PodNotifyOptions(in, out, s)
+}
+
 func autoConvert_v1_PodProxyOptions_To_api_PodProxyOptions(in *PodProxyOptions, out *api.PodProxyOptions, s conversion.Scope) error {
 	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
 		return err
@@ -4781,72 +4809,6 @@ func autoConvert_v1_PodSecurityContext_To_api_PodSecurityContext(in *PodSecurity
 	out.RunAsNonRoot = in.RunAsNonRoot
 	out.SupplementalGroups = in.SupplementalGroups
 	out.FSGroup = in.FSGroup
-	return nil
-}
-
-func autoConvert_api_PodSpec_To_v1_PodSpec(in *api.PodSpec, out *PodSpec, s conversion.Scope) error {
-	if in.Volumes != nil {
-		in, out := &in.Volumes, &out.Volumes
-		*out = make([]Volume, len(*in))
-		for i := range *in {
-			if err := Convert_api_Volume_To_v1_Volume(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.Volumes = nil
-	}
-	if in.InitContainers != nil {
-		in, out := &in.InitContainers, &out.InitContainers
-		*out = make([]Container, len(*in))
-		for i := range *in {
-			if err := Convert_api_Container_To_v1_Container(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.InitContainers = nil
-	}
-	if in.Containers != nil {
-		in, out := &in.Containers, &out.Containers
-		*out = make([]Container, len(*in))
-		for i := range *in {
-			if err := Convert_api_Container_To_v1_Container(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.Containers = nil
-	}
-	out.RestartPolicy = RestartPolicy(in.RestartPolicy)
-	out.TerminationGracePeriodSeconds = in.TerminationGracePeriodSeconds
-	out.ActiveDeadlineSeconds = in.ActiveDeadlineSeconds
-	out.DNSPolicy = DNSPolicy(in.DNSPolicy)
-	out.NodeSelector = in.NodeSelector
-	out.ServiceAccountName = in.ServiceAccountName
-	out.NodeName = in.NodeName
-	if in.SecurityContext != nil {
-		in, out := &in.SecurityContext, &out.SecurityContext
-		*out = new(PodSecurityContext)
-		if err := Convert_api_PodSecurityContext_To_v1_PodSecurityContext(*in, *out, s); err != nil {
-			return err
-		}
-	} else {
-		out.SecurityContext = nil
-	}
-	if in.ImagePullSecrets != nil {
-		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
-		*out = make([]LocalObjectReference, len(*in))
-		for i := range *in {
-			if err := Convert_api_LocalObjectReference_To_v1_LocalObjectReference(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.ImagePullSecrets = nil
-	}
-	out.Hostname = in.Hostname
-	out.Subdomain = in.Subdomain
 	return nil
 }
 

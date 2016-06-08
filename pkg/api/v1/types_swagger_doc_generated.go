@@ -916,6 +916,16 @@ func (NodeSystemInfo) SwaggerDoc() map[string]string {
 	return map_NodeSystemInfo
 }
 
+var map_Notification = map[string]string{
+	"":       "Notification is a mapping which exposes POSIX signal as a user-friendly name.",
+	"name":   "User-friendly name of notification.",
+	"signal": "POSIX signal to which the notification is referring.",
+}
+
+func (Notification) SwaggerDoc() map[string]string {
+	return map_Notification
+}
+
 var map_ObjectFieldSelector = map[string]string{
 	"":           "ObjectFieldSelector selects an APIVersioned field of an object.",
 	"apiVersion": "Version of the schema the FieldPath is written in terms of, defaults to \"v1\".",
@@ -1205,6 +1215,16 @@ func (PodLogOptions) SwaggerDoc() map[string]string {
 	return map_PodLogOptions
 }
 
+var map_PodNotifyOptions = map[string]string{
+	"":                 "PodNotifyOptions is the query options to a Pod's remote signal notification.",
+	"container":        "The container to which send signal. Defaults to only container if there is only one container in the pod.",
+	"notificationName": "Name of notification to send.",
+}
+
+func (PodNotifyOptions) SwaggerDoc() map[string]string {
+	return map_PodNotifyOptions
+}
+
 var map_PodProxyOptions = map[string]string{
 	"":     "PodProxyOptions is the query options to a Pod's proxy call.",
 	"path": "Path is the URL path to use for the current proxy request to pod.",
@@ -1246,6 +1266,7 @@ var map_PodSpec = map[string]string{
 	"imagePullSecrets":              "ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. For example, in the case of docker, only DockerConfig type secrets are honored. More info: http://releases.k8s.io/HEAD/docs/user-guide/images.md#specifying-imagepullsecrets-on-a-pod",
 	"hostname":                      "Specifies the hostname of the Pod If not specified, the pod's hostname will be set to a system-defined value.",
 	"subdomain":                     "If specified, the fully qualified Pod hostname will be \"<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>\". If not specified, the pod will not have a domainname at all.",
+	"notifications":                 "List of notifications defined in the pod.",
 }
 
 func (PodSpec) SwaggerDoc() map[string]string {

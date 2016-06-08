@@ -1558,6 +1558,16 @@ func validateTaintEffect(effect *api.TaintEffect, allowEmpty bool, fldPath *fiel
 	return allErrors
 }
 
+func validateNotifications(notifications map[string]string, fldPath *field.Path) field.ErrorList {
+	allErrors := field.ErrorList{}
+	for notification, signal := range notifications {
+		if len(notification) == 0 || len(signal) == 0 {
+			allErrors = append(allErrors, field.Invalid(fldPath.Child(notification), notification, ""))
+		}
+	}
+	return allErrors
+}
+
 // validateTolerations tests if given tolerations have valid data.
 func validateTolerations(tolerations []api.Toleration, fldPath *field.Path) field.ErrorList {
 	allErrors := field.ErrorList{}
@@ -1614,6 +1624,7 @@ func ValidatePodSpec(spec *api.PodSpec, fldPath *field.Path) field.ErrorList {
 	allErrs = append(allErrs, unversionedvalidation.ValidateLabels(spec.NodeSelector, fldPath.Child("nodeSelector"))...)
 	allErrs = append(allErrs, ValidatePodSecurityContext(spec.SecurityContext, spec, fldPath, fldPath.Child("securityContext"))...)
 	allErrs = append(allErrs, validateImagePullSecrets(spec.ImagePullSecrets, fldPath.Child("imagePullSecrets"))...)
+	allErrs = append(allErrs, validateNotifications(spec.Notifications, fldPath.Child("notifications"))...)
 	if len(spec.ServiceAccountName) > 0 {
 		for _, msg := range ValidateServiceAccountName(spec.ServiceAccountName, false) {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("serviceAccountName"), spec.ServiceAccountName, msg))

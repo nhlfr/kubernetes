@@ -77,6 +77,7 @@ func addKnownTypes(scheme *runtime.Scheme) {
 		&PodAttachOptions{},
 		&PodLogOptions{},
 		&PodExecOptions{},
+		&PodNotifyOptions{},
 		&PodProxyOptions{},
 		&ComponentStatus{},
 		&ComponentStatusList{},

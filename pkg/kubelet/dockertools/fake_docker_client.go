@@ -463,6 +463,13 @@ func (f *FakeDockerClient) AttachToContainer(id string, opts dockertypes.Contain
 	return nil
 }
 
+func (f *FakeDockerClient) KillContainer(id, signal string) error {
+	f.Lock()
+	defer f.Unlock()
+	f.called = append(f.called, "kill")
+	return nil
+}
+
 func (f *FakeDockerClient) InspectExec(id string) (*dockertypes.ContainerExecInspect, error) {
 	return f.ExecInspect, f.popError("inspect_exec")
 }

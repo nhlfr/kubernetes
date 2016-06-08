@@ -3802,6 +3802,35 @@ func (kl *Kubelet) AttachContainer(podFullName string, podUID types.UID, contain
 	return kl.containerRuntime.AttachContainer(container.ID, stdin, stdout, stderr, tty)
 }
 
+func (kl *Kubelet) NotifyContainer(podFullName string, podUID types.UID, containerName string, notificationName string) error {
+	podUID = kl.podManager.TranslatePodUID(podUID)
+
+	_, err := kl.containerRuntime.GetPods(false)
+	if err != nil {
+		return err
+	}
+	pod, ok := kl.podManager.GetPodByFullName(podFullName)
+	if !ok {
+		pod, ok = kl.podManager.GetPodByUID(podUID)
+		if !ok {
+			fmt.Errorf("pod not found (%q)", podFullName)
+		}
+	}
+	signal, ok := pod.Spec.Notifications[notificationName]
+	if !ok {
+		return fmt.Errorf("notification not found (%q)", notificationName)
+	}
+
+	container, err := kl.findContainer(podFullName, podUID, containerName)
+	if err != nil {
+		return err
+	}
+	if container == nil {
+		return fmt.Errorf("container not found (%q)", containerName)
+	}
+	return kl.containerRuntime.KillContainer(container.ID, signal)
+}
+
 // PortForward connects to the pod's port and copies data between the port
 // and the stream.
 func (kl *Kubelet) PortForward(podFullName string, podUID types.UID, port uint16, stream io.ReadWriteCloser) error {

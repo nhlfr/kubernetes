@@ -93,6 +93,7 @@ func AddToScheme(scheme *runtime.Scheme) {
 		&ListOptions{},
 		&PodAttachOptions{},
 		&PodLogOptions{},
+		&PodNotifyOptions{},
 		&PodExecOptions{},
 		&PodProxyOptions{},
 		&ComponentStatus{},

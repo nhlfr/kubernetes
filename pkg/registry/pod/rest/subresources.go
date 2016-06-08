@@ -150,6 +150,43 @@ func (r *ExecREST) ConnectMethods() []string {
 	return upgradeableMethods
 }
 
+// NotifyREEST implements the signal subresource for a Pod
+type NotifyREST struct {
+	Store       *registry.Store
+	KubeletConn client.ConnectionInfoGetter
+}
+
+// Implement Connecter
+var _ = rest.Connecter(&NotifyREST{})
+
+// New creates a new Pod object
+func (r *NotifyREST) New() runtime.Object {
+	return &api.Pod{}
+}
+
+// Connect returns a handler for the pod notify proxy
+func (r *NotifyREST) Connect(ctx api.Context, name string, opts runtime.Object, responder rest.Responder) (http.Handler, error) {
+	notifyOpts, ok := opts.(*api.PodNotifyOptions)
+	if !ok {
+		return nil, fmt.Errorf("invalid options object: %#v", opts)
+	}
+	location, transport, err := pod.NotifyLocation(r.Store, r.KubeletConn, ctx, name, notifyOpts)
+	if err != nil {
+		return nil, err
+	}
+	return newThrottledUpgradeAwareProxyHandler(location, transport, false, false, responder), nil
+}
+
+// NewConnectOptions returns the versioned object that represents exec parameters
+func (r *NotifyREST) NewConnectOptions() (runtime.Object, bool, string) {
+	return &api.PodNotifyOptions{}, false, ""
+}
+
+// ConnectMethods retunrs the methods supported by notify
+func (r *NotifyREST) ConnectMethods() []string {
+	return upgradeableMethods
+}
+
 // PortForwardREST implements the portforward subresource for a Pod
 type PortForwardREST struct {
 	Store       *registry.Store

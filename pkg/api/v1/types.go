@@ -1661,6 +1661,14 @@ const (
 	PodInitContainerStatusesAnnotationKey = "pod.alpha.kubernetes.io/init-container-statuses"
 )
 
+// Notification is a mapping which exposes POSIX signal as a user-friendly name.
+type Notification struct {
+	// User-friendly name of notification.
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
+	// POSIX signal to which the notification is referring.
+	Signal string `json:"signal" protobuf:"bytes,2,opt,name=signal"`
+}
+
 // PodSpec is a description of a pod.
 type PodSpec struct {
 	// List of volumes that can be mounted by containers belonging to the pod.
@@ -1748,6 +1756,8 @@ type PodSpec struct {
 	// If specified, the fully qualified Pod hostname will be "<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>".
 	// If not specified, the pod will not have a domainname at all.
 	Subdomain string `json:"subdomain,omitempty" protobuf:"bytes,17,opt,name=subdomain"`
+	// List of notifications defined in the pod.
+	Notifications []Notification `json:"notifications,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,18,rep,name=notifications"`
 }
 
 // PodSecurityContext holds pod-level security attributes and common container settings.
@@ -2718,6 +2728,18 @@ type PodAttachOptions struct {
 	// The container in which to execute the command.
 	// Defaults to only container if there is only one container in the pod.
 	Container string `json:"container,omitempty" protobuf:"bytes,5,opt,name=container"`
+}
+
+// PodNotifyOptions is the query options to a Pod's remote signal notification.
+type PodNotifyOptions struct {
+	unversioned.TypeMeta `json:",inline"`
+
+	// The container to which send signal.
+	// Defaults to only container if there is only one container in the pod.
+	Container string `json:"container,omitempty" protobuf:"bytes,1,opt,name=container"`
+
+	// Name of notification to send.
+	NotificationName string `json:"notificationName" protobuf:"bytes,2,opt,name=notificationName"`
 }
 
 // PodExecOptions is the query options to a Pod's remote exec call.

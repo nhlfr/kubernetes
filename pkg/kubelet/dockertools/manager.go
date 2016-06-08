@@ -1084,6 +1084,10 @@ func (dm *DockerManager) AttachContainer(containerID kubecontainer.ContainerID, 
 	return dm.client.AttachToContainer(containerID.ID, opts, sopts)
 }
 
+func (dm *DockerManager) KillContainer(containerID kubecontainer.ContainerID, signal string) error {
+	return dm.client.KillContainer(containerID.ID, signal)
+}
+
 func noPodInfraContainerError(podName, podNamespace string) error {
 	return fmt.Errorf("cannot find pod infra container in pod %q", kubecontainer.BuildPodFullName(podName, podNamespace))
 }

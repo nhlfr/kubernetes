@@ -1469,6 +1469,8 @@ type PodSpec struct {
 	// If specified, the fully qualified Pod hostname will be "<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>".
 	// If not specified, the pod will not have a domainname at all.
 	Subdomain string `json:"subdomain,omitempty"`
+	// List of notifications defined in the pod.
+	Notifications map[string]string `json:"notifications,omitempty"`
 }
 
 // PodSecurityContext holds pod-level security attributes and common container settings.
@@ -2285,6 +2287,16 @@ type PodAttachOptions struct {
 	Container string `json:"container,omitempty"`
 }
 
+type PodNotifyOptions struct {
+	unversioned.TypeMeta `json:",inline"`
+
+	// Container to attach to.
+	Container string `json:"container,omitempty"`
+
+	// Name of notification to send.
+	NotificationName string `json:"notificationName"`
+}
+
 // PodExecOptions is the query options to a Pod's remote exec call
 type PodExecOptions struct {
 	unversioned.TypeMeta
@@ -2738,6 +2750,9 @@ const (
 	ExecTTYParam = "tty"
 	// Command to run for remote command execution
 	ExecCommandParamm = "command"
+
+	// Name of notification
+	NotifyNameParam = "notificationName"
 
 	// Name of header that specifies stream type
 	StreamType = "streamType"

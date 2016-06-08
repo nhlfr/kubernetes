@@ -545,6 +545,7 @@ func (m *Master) initV1ResourcesStorage(c *Config) {
 		"pods/portforward": podStorage.PortForward,
 		"pods/proxy":       podStorage.Proxy,
 		"pods/binding":     podStorage.Binding,
+		"pods/notify":      podStorage.Notify,
 		"bindings":         podStorage.Binding,
 
 		"podTemplates": podTemplateStorage,

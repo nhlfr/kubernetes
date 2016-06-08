@@ -118,10 +118,15 @@ type Runtime interface {
 	ContainerCommandRunner
 	// ContainerAttach encapsulates the attaching to containers for testability
 	ContainerAttacher
+	ContainerKiller
 }
 
 type ContainerAttacher interface {
 	AttachContainer(id ContainerID, stdin io.Reader, stdout, stderr io.WriteCloser, tty bool) (err error)
+}
+
+type ContainerKiller interface {
+	KillContainer(id ContainerID, signal string) (err error)
 }
 
 // CommandRunner encapsulates the command runner interfaces for testability.

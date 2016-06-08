@@ -436,6 +436,19 @@ func (d *kubeDockerClient) AttachToContainer(id string, opts dockertypes.Contain
 	return d.holdHijackedConnection(sopts.RawTerminal, sopts.InputStream, sopts.OutputStream, sopts.ErrorStream, resp)
 }
 
+func (d *kubeDockerClient) KillContainer(id, signal string) error {
+	ctx, cancel := getDefaultContext()
+	defer cancel()
+	err := d.client.ContainerKill(ctx, id, signal)
+	if ctxErr := contextError(ctx); ctxErr != nil {
+		return ctxErr
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // redirectResponseToOutputStream redirect the response stream to stdout and stderr. When tty is true, all stream will
 // only be redirected to stdout.
 func (d *kubeDockerClient) redirectResponseToOutputStream(tty bool, outputStream, errorStream io.Writer, resp io.Reader) error {
