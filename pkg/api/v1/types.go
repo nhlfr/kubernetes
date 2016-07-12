@@ -1200,6 +1200,8 @@ type Container struct {
 	// Whether this container should allocate a TTY for itself, also requires 'stdin' to be true.
 	// Default is false.
 	TTY bool `json:"tty,omitempty" protobuf:"varint,18,opt,name=tty"`
+	// List of notifications defined in the container.
+	Notifications []Notification `json:"notifications,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,19,rep,name=notifications"`
 }
 
 // Handler defines a specific action that should be taken
@@ -1661,6 +1663,15 @@ const (
 	// type and cleared.
 	PodInitContainerStatusesAnnotationKey = "pod.alpha.kubernetes.io/init-container-statuses"
 )
+
+type Notification struct {
+	// User-friendly name of notification.
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
+	// Type of notification
+	Type string `json:"type" protobuf:"bytes,2,opt,name=type"`
+	// POSIX signal name; used only when type is "signal"
+	Signal string `json:"signal,omitempty" protobuf:"bytes,3,opt,name=signal"`
+}
 
 // PodSpec is a description of a pod.
 type PodSpec struct {
@@ -3353,6 +3364,19 @@ type RangeAllocation struct {
 	Range string `json:"range" protobuf:"bytes,2,opt,name=range"`
 	// Data is a bit array containing all allocated addresses in the previous segment.
 	Data []byte `json:"data" protobuf:"bytes,3,opt,name=data"`
+}
+
+// NotifySpec describes the attributes of a notify subresource.
+type NotifySpec struct {
+	Name      string `json:"name" protobuf:"bytes,1,opt,name=name"`
+	Container string `json:"container" protobuf:"bytes,2,opt,name=container"`
+}
+
+// Notify represents a notification request for a pod.
+type Notify struct {
+	unversioned.TypeMeta `json:",inline"`
+	ObjectMeta           `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Spec                 NotifySpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
 }
 
 const (

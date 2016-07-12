@@ -36,8 +36,8 @@ type mockPodKiller struct {
 	gracePeriodOverride *int64
 }
 
-// killPodNow records the pod that was killed
-func (m *mockPodKiller) killPodNow(pod *api.Pod, status api.PodStatus, gracePeriodOverride *int64) error {
+// stopPodNow records the pod that was killed
+func (m *mockPodKiller) stopPodNow(pod *api.Pod, status api.PodStatus, gracePeriodOverride *int64) error {
 	m.pod = pod
 	m.status = status
 	m.gracePeriodOverride = gracePeriodOverride
@@ -128,7 +128,7 @@ func TestMemoryPressure(t *testing.T) {
 	summaryProvider := &fakeSummaryProvider{result: summaryStatsMaker("2Gi", podStats)}
 	manager := &managerImpl{
 		clock:           fakeClock,
-		killPodFunc:     podKiller.killPodNow,
+		stopPodFunc:     podKiller.stopPodNow,
 		config:          config,
 		recorder:        &record.FakeRecorder{},
 		summaryProvider: summaryProvider,
