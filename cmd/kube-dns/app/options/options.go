@@ -32,6 +32,7 @@ type KubeDNSConfig struct {
 	ClusterDomain  string
 	KubeConfigFile string
 	KubeMasterURL  string
+	Insecure       bool
 	HealthzPort    int
 	DNSPort        int
 	// Federations maps federation names to their registered domain names.
@@ -43,6 +44,7 @@ func NewKubeDNSConfig() *KubeDNSConfig {
 		ClusterDomain:  "cluster.local.",
 		KubeConfigFile: "",
 		KubeMasterURL:  "",
+		Insecure:       false,
 		HealthzPort:    8081,
 		DNSPort:        53,
 		Federations:    make(map[string]string),
@@ -141,6 +143,7 @@ func (s *KubeDNSConfig) AddFlags(fs *pflag.FlagSet) {
 	fs.Var(clusterDomainVar{&s.ClusterDomain}, "domain", "domain under which to create names")
 	fs.StringVar(&s.KubeConfigFile, "kubecfg-file", s.KubeConfigFile, "Location of kubecfg file for access to kubernetes master service; --kube-master-url overrides the URL part of this; if neither this nor --kube-master-url are provided, defaults to service account tokens")
 	fs.Var(kubeMasterURLVar{&s.KubeMasterURL}, "kube-master-url", "URL to reach kubernetes master. Env variables in this flag will be expanded.")
+	fs.BoolVar(&s.Insecure, "insecure", s.Insecure, "")
 	fs.IntVar(&s.HealthzPort, "healthz-port", s.HealthzPort, "port on which to serve a kube-dns HTTP readiness probe.")
 	fs.IntVar(&s.DNSPort, "dns-port", s.DNSPort, "port on which to serve DNS requests.")
 	fs.Var(federationsVar{s.Federations}, "federations", "a comma separated list of the federation names and their corresponding domain names to which this cluster belongs. Example: \"myfederation1=example.com,myfederation2=example2.com,myfederation3=example.com\"")

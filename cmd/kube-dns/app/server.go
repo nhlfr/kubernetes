@@ -70,7 +70,7 @@ func newKubeClient(dnsConfig *options.KubeDNSConfig) (clientset.Interface, error
 		err    error
 	)
 
-	if dnsConfig.KubeMasterURL != "" && dnsConfig.KubeConfigFile == "" {
+	if (dnsConfig.KubeMasterURL != "" || dnsConfig.Insecure) && dnsConfig.KubeConfigFile == "" {
 		// Only --kube-master-url was provided.
 		config = &restclient.Config{
 			Host:          dnsConfig.KubeMasterURL,
@@ -85,6 +85,7 @@ func newKubeClient(dnsConfig *options.KubeDNSConfig) (clientset.Interface, error
 		// fall back on the service account token.
 		overrides := &kclientcmd.ConfigOverrides{}
 		overrides.ClusterInfo.Server = dnsConfig.KubeMasterURL                                // might be "", but that is OK
+		overrides.ClusterInfo.InsecureSkipTLSVerify = dnsConfig.Insecure                      // might be "", but that is OK
 		rules := &kclientcmd.ClientConfigLoadingRules{ExplicitPath: dnsConfig.KubeConfigFile} // might be "", but that is OK
 		if config, err = kclientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides).ClientConfig(); err != nil {
 			return nil, err

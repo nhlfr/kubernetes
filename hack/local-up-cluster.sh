@@ -7,7 +7,7 @@
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -411,35 +411,101 @@ function start_kubedns {
 
     if [[ "${ENABLE_CLUSTER_DNS}" = true ]]; then
         echo "Creating kube-system namespace"
-        sed -e "s/{{ pillar\['dns_replicas'\] }}/${DNS_REPLICAS}/g;s/{{ pillar\['dns_domain'\] }}/${DNS_DOMAIN}/g;" "${KUBE_ROOT}/cluster/saltbase/salt/kube-dns/skydns-rc.yaml.in" >| skydns-rc.yaml
+        sed -e "s/{{ pillar\['dns_replicas'\] }}/${DNS_REPLICAS}/g;s/{{ pillar\['dns_domain'\] }}/${DNS_DOMAIN}/g;" "${KUBE_ROOT}/cluster/saltbase/salt/kube-dns/skydns-rc.yaml.in" >| /tmp/skydns-rc.yaml
         if [[ "${FEDERATION:-}" == "true" ]]; then
           FEDERATIONS_DOMAIN_MAP="${FEDERATIONS_DOMAIN_MAP:-}"
           if [[ -z "${FEDERATIONS_DOMAIN_MAP}" && -n "${FEDERATION_NAME:-}" && -n "${DNS_ZONE_NAME:-}" ]]; then
             FEDERATIONS_DOMAIN_MAP="${FEDERATION_NAME}=${DNS_ZONE_NAME}"
           fi
           if [[ -n "${FEDERATIONS_DOMAIN_MAP}" ]]; then
-            sed -i -e "s/{{ pillar\['federations_domain_map'\] }}/- --federations=${FEDERATIONS_DOMAIN_MAP}/g" skydns-rc.yaml
+            sed -i -e "s/{{ pillar\['federations_domain_map'\] }}/- --federations=${FEDERATIONS_DOMAIN_MAP}\n        - --kube-master-url=http://${API_HOST}:${API_PORT}\n        - --insecure/g" /tmp/skydns-rc.yaml
           else
-            sed -i -e "/{{ pillar\['federations_domain_map'\] }}/d" skydns-rc.yaml
+            sed -i -e "s/{{ pillar\['federations_domain_map'\] }}/- --kube-master-url=http:\/\/${API_HOST}:${API_PORT}\n        - --insecure/g" /tmp/skydns-rc.yaml
           fi
         else
-          sed -i -e "/{{ pillar\['federations_domain_map'\] }}/d" skydns-rc.yaml
+          sed -i -e "s/{{ pillar\['federations_domain_map'\] }}/- --kube-master-url=http:\/\/${API_HOST}:${API_PORT}\n        - --insecure/g" /tmp/skydns-rc.yaml
         fi
-        sed -e "s/{{ pillar\['dns_server'\] }}/${DNS_SERVER_IP}/g" "${KUBE_ROOT}/cluster/saltbase/salt/kube-dns/skydns-svc.yaml.in" >| skydns-svc.yaml
-        cat <<EOF >namespace.yaml
+        sed -e "s/{{ pillar\['dns_server'\] }}/${DNS_SERVER_IP}/g" "${KUBE_ROOT}/cluster/saltbase/salt/kube-dns/skydns-svc.yaml.in" >| /tmp/skydns-svc.yaml
+        cat <<EOF >/tmp/namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
   name: kube-system
 EOF
-        ${KUBECTL} config set-cluster local --server=http://${API_HOST}:${API_PORT} --insecure-skip-tls-verify=true
-        ${KUBECTL} config set-context local --cluster=local
-        ${KUBECTL} config use-context local
+        cat <<EOF >/tmp/skydns-rc.yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: kube-dns-v18
+  namespace: kube-system
+  labels:
+    k8s-app: kube-dns
+    version: v18
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-dns
+        version: v18
+        kubernetes.io/cluster-service: "true"
+    spec:
+      containers:
+      - name: kubedns
+        image: gcr.io/google_containers/kubedns-amd64:1.6
+	resources:
+	  limits:
+	    cpu: 100m
+	    memory: 200Mi
+	  requests:
+            cpu: 100m
+	    memory: 200Mi
+	livenessProbe:
+	  httpGet:
+	    path: /healthz
+	    port: 8080
+	    scheme: HTTP
+	  initialDelaySeconds: 60
+	  timeoutSeconds: 5
+	  successThreshold: 1
+	  failureThreshold: 5
+          readinessProbe:
+	    httpGet:
+	      path: /readiness
+	      port: 8081
+	      scheme: HTTP
+	    initialDelaySeconds: 30
+	    timeoutSeconds: 5
+	  args:
+	  - --domain=${DNS_DOMAIN}
+	  - --dns-port=1053
+	  ports:
+	  - container
+EOF
+        cat <<EOF >/tmp/skydns-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skydns-config
+  namespace: kube-system
+data:
+  config: |-
+    apiVersion: v1
+    kind: Config
+    clusters:
+    - cluster:
+        insecure-skip-tls-verify: true
+        server: http://127.0.0.1:8080
+      name: local
+    current-context: local
+    preferences: {}
+EOF
+        KUBERNETES_PROVIDER=local ${KUBECTL} config set-cluster local --server=http://${API_HOST}:${API_PORT} --insecure-skip-tls-verify=true
+        KUBERNETES_PROVIDER=local ${KUBECTL} config set-context local --cluster=local
+        KUBERNETES_PROVIDER=local ${KUBECTL} config use-context local
 
-        ${KUBECTL} create -f namespace.yaml
+        KUBERNETES_PROVIDER=local ${KUBECTL} create -f /tmp/namespace.yaml
         # use kubectl to create skydns rc and service
-        ${KUBECTL} --namespace=kube-system create -f skydns-rc.yaml
-        ${KUBECTL} --namespace=kube-system create -f skydns-svc.yaml
+        KUBERNETES_PROVIDER=local ${KUBECTL} --namespace=kube-system create -f /tmp/skydns-rc.yaml
+        KUBERNETES_PROVIDER=local ${KUBECTL} --namespace=kube-system create -f /tmp/skydns-svc.yaml
         echo "Kube-dns rc and service successfully deployed."
     fi
 
