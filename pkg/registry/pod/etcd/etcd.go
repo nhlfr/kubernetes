@@ -45,6 +45,7 @@ type PodStorage struct {
 	Log         *podrest.LogREST
 	Proxy       *podrest.ProxyREST
 	Exec        *podrest.ExecREST
+	SimpleExec  *podrest.SimpleExecREST
 	Attach      *podrest.AttachREST
 	PortForward *podrest.PortForwardREST
 }
@@ -104,6 +105,7 @@ func NewStorage(opts generic.RESTOptions, k client.ConnectionInfoGetter, proxyTr
 		Log:         &podrest.LogREST{Store: store, KubeletConn: k},
 		Proxy:       &podrest.ProxyREST{Store: store, ProxyTransport: proxyTransport},
 		Exec:        &podrest.ExecREST{Store: store, KubeletConn: k},
+		SimpleExec:  &podrest.SimpleExecREST{Store: store, KubeletConn: k},
 		Attach:      &podrest.AttachREST{Store: store, KubeletConn: k},
 		PortForward: &podrest.PortForwardREST{Store: store, KubeletConn: k},
 	}

@@ -2088,6 +2088,17 @@ message PodSignature {
   optional OwnerReference podController = 1;
 }
 
+// PodSimpleExecOptions is the query options to a Pod's remote simple exec call.
+message PodSimpleExecOptions {
+  optional bytes stdin = 1;
+
+  optional bool stdout = 2;
+
+  optional bool stderr = 3;
+
+  optional string container = 4;
+}
+
 // PodSpec is a description of a pod.
 message PodSpec {
   // List of volumes that can be mounted by containers belonging to the pod.

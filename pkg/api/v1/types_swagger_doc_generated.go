@@ -1251,6 +1251,14 @@ func (PodSignature) SwaggerDoc() map[string]string {
 	return map_PodSignature
 }
 
+var map_PodSimpleExecOptions = map[string]string{
+	"": "PodSimpleExecOptions is the query options to a Pod's remote simple exec call.",
+}
+
+func (PodSimpleExecOptions) SwaggerDoc() map[string]string {
+	return map_PodSimpleExecOptions
+}
+
 var map_PodSpec = map[string]string{
 	"":                              "PodSpec is a description of a pod.",
 	"volumes":                       "List of volumes that can be mounted by containers belonging to the pod. More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md",

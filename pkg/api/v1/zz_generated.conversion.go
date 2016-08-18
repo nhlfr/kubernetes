@@ -250,6 +250,8 @@ func RegisterConversions(scheme *runtime.Scheme) error {
 		Convert_api_PodSecurityContext_To_v1_PodSecurityContext,
 		Convert_v1_PodSignature_To_api_PodSignature,
 		Convert_api_PodSignature_To_v1_PodSignature,
+		Convert_v1_PodSimpleExecOptions_To_api_PodSimpleExecOptions,
+		Convert_api_PodSimpleExecOptions_To_v1_PodSimpleExecOptions,
 		Convert_v1_PodSpec_To_api_PodSpec,
 		Convert_api_PodSpec_To_v1_PodSpec,
 		Convert_v1_PodStatus_To_api_PodStatus,
@@ -4913,6 +4915,40 @@ func autoConvert_api_PodSignature_To_v1_PodSignature(in *api.PodSignature, out *
 
 func Convert_api_PodSignature_To_v1_PodSignature(in *api.PodSignature, out *PodSignature, s conversion.Scope) error {
 	return autoConvert_api_PodSignature_To_v1_PodSignature(in, out, s)
+}
+
+func autoConvert_v1_PodSimpleExecOptions_To_api_PodSimpleExecOptions(in *PodSimpleExecOptions, out *api.PodSimpleExecOptions, s conversion.Scope) error {
+	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
+		return err
+	}
+	if err := conversion.Convert_Slice_byte_To_Slice_byte(&in.Stdin, &out.Stdin, s); err != nil {
+		return err
+	}
+	out.Stdout = in.Stdout
+	out.Stderr = in.Stderr
+	out.Container = in.Container
+	return nil
+}
+
+func Convert_v1_PodSimpleExecOptions_To_api_PodSimpleExecOptions(in *PodSimpleExecOptions, out *api.PodSimpleExecOptions, s conversion.Scope) error {
+	return autoConvert_v1_PodSimpleExecOptions_To_api_PodSimpleExecOptions(in, out, s)
+}
+
+func autoConvert_api_PodSimpleExecOptions_To_v1_PodSimpleExecOptions(in *api.PodSimpleExecOptions, out *PodSimpleExecOptions, s conversion.Scope) error {
+	if err := api.Convert_unversioned_TypeMeta_To_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta, s); err != nil {
+		return err
+	}
+	if err := conversion.Convert_Slice_byte_To_Slice_byte(&in.Stdin, &out.Stdin, s); err != nil {
+		return err
+	}
+	out.Stdout = in.Stdout
+	out.Stderr = in.Stderr
+	out.Container = in.Container
+	return nil
+}
+
+func Convert_api_PodSimpleExecOptions_To_v1_PodSimpleExecOptions(in *api.PodSimpleExecOptions, out *PodSimpleExecOptions, s conversion.Scope) error {
+	return autoConvert_api_PodSimpleExecOptions_To_v1_PodSimpleExecOptions(in, out, s)
 }
 
 func autoConvert_v1_PodSpec_To_api_PodSpec(in *PodSpec, out *api.PodSpec, s conversion.Scope) error {

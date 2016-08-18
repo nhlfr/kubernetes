@@ -150,6 +150,26 @@ func (r *ExecREST) ConnectMethods() []string {
 	return upgradeableMethods
 }
 
+// SimpleExecREST implements the run subresource for a Pod
+type SimpleExecREST struct {
+	Store       *registry.Store
+	KubeletConn client.ConnectionInfoGetter
+}
+
+// Implement Creater
+var _ = rest.Creater(&SimpleExecREST{})
+
+// New creates a new PodSimpleExecOptions object
+func (r *SimpleExecREST) New() runtime.Object {
+	// return &api.PodSimpleExecOptions{}
+	return &api.Pod{}
+}
+
+// Create creates the PodSimpleExecOptions object
+func (r *SimpleExecREST) Create(ctx api.Context, obj runtime.Object) (runtime.Object, error) {
+	return obj, nil
+}
+
 // PortForwardREST implements the portforward subresource for a Pod
 type PortForwardREST struct {
 	Store       *registry.Store

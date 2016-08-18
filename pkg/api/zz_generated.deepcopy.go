@@ -147,6 +147,7 @@ func RegisterDeepCopies(scheme *runtime.Scheme) error {
 		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_api_PodProxyOptions, InType: reflect.TypeOf(&PodProxyOptions{})},
 		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_api_PodSecurityContext, InType: reflect.TypeOf(&PodSecurityContext{})},
 		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_api_PodSignature, InType: reflect.TypeOf(&PodSignature{})},
+		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_api_PodSimpleExecOptions, InType: reflect.TypeOf(&PodSimpleExecOptions{})},
 		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_api_PodSpec, InType: reflect.TypeOf(&PodSpec{})},
 		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_api_PodStatus, InType: reflect.TypeOf(&PodStatus{})},
 		conversion.GeneratedDeepCopyFunc{Fn: DeepCopy_api_PodStatusResult, InType: reflect.TypeOf(&PodStatusResult{})},
@@ -2580,6 +2581,25 @@ func DeepCopy_api_PodSignature(in interface{}, out interface{}, c *conversion.Cl
 		} else {
 			out.PodController = nil
 		}
+		return nil
+	}
+}
+
+func DeepCopy_api_PodSimpleExecOptions(in interface{}, out interface{}, c *conversion.Cloner) error {
+	{
+		in := in.(*PodSimpleExecOptions)
+		out := out.(*PodSimpleExecOptions)
+		out.TypeMeta = in.TypeMeta
+		if in.Stdin != nil {
+			in, out := &in.Stdin, &out.Stdin
+			*out = make([]byte, len(*in))
+			copy(*out, *in)
+		} else {
+			out.Stdin = nil
+		}
+		out.Stdout = in.Stdout
+		out.Stderr = in.Stderr
+		out.Container = in.Container
 		return nil
 	}
 }

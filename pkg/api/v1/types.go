@@ -2840,6 +2840,15 @@ type PodExecOptions struct {
 	Command []string `json:"command" protobuf:"bytes,6,rep,name=command"`
 }
 
+// PodSimpleExecOptions is the query options to a Pod's remote simple exec call.
+type PodSimpleExecOptions struct {
+	unversioned.TypeMeta `json:",inline"`
+	Stdin                []byte `json:"stdin,omitempty" protobuf:"bytes,1,opt,name=stdin"`
+	Stdout               bool   `json:"stdout,omitempty" protobuf:"varint,2,opt,name=stdout"`
+	Stderr               bool   `json:"stderr,omitempty" protobuf:"varint,3,opt,name=stderr"`
+	Container            string `json:"container,omitempty" protobuf:"bytes,4,opt,name=container"`
+}
+
 // PodProxyOptions is the query options to a Pod's proxy call.
 type PodProxyOptions struct {
 	unversioned.TypeMeta `json:",inline"`

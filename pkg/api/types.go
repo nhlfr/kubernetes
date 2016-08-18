@@ -2364,7 +2364,7 @@ type PodLogOptions struct {
 }
 
 // PodAttachOptions is the query options to a Pod's remote attach call
-// TODO: merge w/ PodExecOptions below for stdin, stdout, etc
+// TODO: merge w/ PodExecOptions and PodSimpleExecOptions below for stdin, stdout, etc
 type PodAttachOptions struct {
 	unversioned.TypeMeta `json:",inline"`
 
@@ -2405,6 +2405,15 @@ type PodExecOptions struct {
 
 	// Command is the remote command to execute; argv array; not executed within a shell.
 	Command []string
+}
+
+// PodSimpleExecOptions is the query options to a Pod's remote simple exec call.
+type PodSimpleExecOptions struct {
+	unversioned.TypeMeta `json:",inline"`
+	Stdin                []byte
+	Stdout               bool
+	Stderr               bool
+	Container            string
 }
 
 // PodProxyOptions is the query options to a Pod's proxy call
