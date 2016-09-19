@@ -728,3 +728,26 @@ func IsSiblingCommandExists(cmd *cobra.Command, targetCmdName string) bool {
 
 	return false
 }
+
+// PrintRESTClientStream makes a request for the given URI and prints the whole raw content.
+func PrintRESTClientStream(restClient kubectl.RESTClient, uri string) error {
+	stream, err := restClient.Get().RequestURI(uri).Stream()
+	if err != nil {
+		return err
+	}
+	defer stream.Close()
+
+	for {
+		buffer := make([]byte, 1024, 1024)
+		bytesRead, err := stream.Read(buffer)
+		if bytesRead > 0 {
+			fmt.Printf("%s", string(buffer[:bytesRead]))
+		}
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+	}
+}

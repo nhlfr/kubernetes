@@ -96,6 +96,10 @@ type Factory struct {
 	ClientSet func() (*internalclientset.Clientset, error)
 	// Returns a RESTClient for accessing Kubernetes resources or an error.
 	RESTClient func() (*restclient.RESTClient, error)
+	// Returns a RESTClient for accessing Kubernetes proxy (with given address and port) or an error.
+	RESTClientProxy func(address string, port int) (*restclient.RESTClient, error)
+	// Returns
+	RESTClientProxyUnix func(path string) (*restclient.RESTClient, error)
 	// Returns a client.Config for accessing the Kubernetes server.
 	ClientConfig func() (*restclient.Config, error)
 	// Returns a RESTClient for working with the specified RESTMapping or an error. This is intended
@@ -369,6 +373,28 @@ func NewFactory(optionalClientConfig clientcmd.ClientConfig) *Factory {
 			if err != nil {
 				return nil, err
 			}
+			return restclient.RESTClientFor(clientConfig)
+		},
+		RESTClientProxy: func(address string, port int) (*restclient.RESTClient, error) {
+			clientConfig, err := clients.ClientConfigForVersion(nil)
+			if err != nil {
+				return nil, err
+			}
+
+			host := fmt.Sprintf("%s:%d", address, port)
+			clientConfig.Host = host
+
+			return restclient.RESTClientFor(clientConfig)
+		},
+		RESTClientProxyUnix: func(path string) (*restclient.RESTClient, error) {
+			clientConfig, err := clients.ClientConfigForVersion(nil)
+			if err != nil {
+				return nil, err
+			}
+
+			clientConfig.Host = path
+			clientConfig.Scheme = "unix"
+
 			return restclient.RESTClientFor(clientConfig)
 		},
 		ClientSet: func() (*internalclientset.Clientset, error) {
