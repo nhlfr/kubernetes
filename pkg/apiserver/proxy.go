@@ -21,7 +21,6 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"path"
 	"strings"
@@ -42,16 +41,19 @@ import (
 	"k8s.io/kubernetes/pkg/apiserver/request"
 )
 
-// ProxyHandler provides a http.Handler which will proxy traffic to locations
-// specified by items implementing Redirector.
-type ProxyHandler struct {
+type RedirectedProxyHandler struct {
 	prefix     string
 	storage    map[string]rest.Storage
 	serializer runtime.NegotiatedSerializer
 	mapper     api.RequestContextMapper
 }
 
-func (r *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+type RedirectedProxyErrorResponder struct{}
+
+func (r *RedirectedProxyErrorResponder) Error(err error) {
+}
+
+func (r *RedirectedProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	proxyHandlerTraceID := rand.Int63()
 
 	var verb string
@@ -166,9 +168,9 @@ func (r *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// TODO convert this entire proxy to an UpgradeAwareProxy similar to
 	// https://github.com/openshift/origin/blob/master/pkg/util/httpproxy/upgradeawareproxy.go.
 	// That proxy needs to be modified to support multiple backends, not just 1.
-	if r.tryUpgrade(w, req, newReq, location, roundTripper, gv) {
+	/* if r.tryUpgrade(w, req, newReq, location, roundTripper, gv) {
 		return
-	}
+	} */
 
 	// Redirect requests of the form "/{resource}/{name}" to "/{resource}/{name}/"
 	// This is essentially a hack for http://issue.k8s.io/4958.
@@ -189,7 +191,7 @@ func (r *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		glog.V(4).Infof("[%x] Proxy %v finished %v.", proxyHandlerTraceID, req.URL, time.Now().Sub(start))
 	}()
 
-	proxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: location.Scheme, Host: location.Host})
+	// proxy := httputil.NewSingleHostReverseProxy(&url.URL{Scheme: location.Scheme, Host: location.Host})
 	alreadyRewriting := false
 	if roundTripper != nil {
 		_, alreadyRewriting = roundTripper.(*proxyutil.Transport)
@@ -209,13 +211,16 @@ func (r *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 		roundTripper = pTransport
 	}
-	proxy.Transport = roundTripper
+	/* proxy.Transport = roundTripper
 	proxy.FlushInterval = 200 * time.Millisecond
+	proxy.ServeHTTP(w, newReq) */
+
+	proxy := proxyutil.NewProxyHandler(location, roundTripper, true, false, &RedirectedProxyErrorResponder{})
 	proxy.ServeHTTP(w, newReq)
 }
 
 // tryUpgrade returns true if the request was handled.
-func (r *ProxyHandler) tryUpgrade(w http.ResponseWriter, req, newReq *http.Request, location *url.URL, transport http.RoundTripper, gv unversioned.GroupVersion) bool {
+func (r *RedirectedProxyHandler) tryUpgrade(w http.ResponseWriter, req, newReq *http.Request, location *url.URL, transport http.RoundTripper, gv unversioned.GroupVersion) bool {
 	if !httpstream.IsUpgradeRequest(req) {
 		return false
 	}

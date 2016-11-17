@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package rest
+package proxy
 
 import (
 	"bufio"
@@ -33,15 +33,14 @@ import (
 	utilconfig "k8s.io/kubernetes/pkg/util/config"
 	"k8s.io/kubernetes/pkg/util/httpstream"
 	utilnet "k8s.io/kubernetes/pkg/util/net"
-	"k8s.io/kubernetes/pkg/util/proxy"
 	utilruntime "k8s.io/kubernetes/pkg/util/runtime"
 
 	"github.com/golang/glog"
 	"github.com/mxk/go-flowrate/flowrate"
 )
 
-// UpgradeAwareProxyHandler is a handler for proxy requests that may require an upgrade
-type UpgradeAwareProxyHandler struct {
+// ProxyHandler is a handler for proxy requests that may require an upgrade
+type ProxyHandler struct {
 	UpgradeRequired bool
 	Location        *url.URL
 	// Transport provides an optional round tripper to use to proxy. If nil, the default proxy transport is used
@@ -64,10 +63,10 @@ type ErrorResponder interface {
 	Error(err error)
 }
 
-// NewUpgradeAwareProxyHandler creates a new proxy handler with a default flush interval. Responder is required for returning
+// NewProxyHandler creates a new proxy handler with a default flush interval. Responder is required for returning
 // errors to the caller.
-func NewUpgradeAwareProxyHandler(location *url.URL, transport http.RoundTripper, wrapTransport, upgradeRequired bool, responder ErrorResponder) *UpgradeAwareProxyHandler {
-	return &UpgradeAwareProxyHandler{
+func NewProxyHandler(location *url.URL, transport http.RoundTripper, wrapTransport, upgradeRequired bool, responder ErrorResponder) *ProxyHandler {
+	return &ProxyHandler{
 		Location:        location,
 		Transport:       transport,
 		WrapTransport:   wrapTransport,
@@ -78,7 +77,7 @@ func NewUpgradeAwareProxyHandler(location *url.URL, transport http.RoundTripper,
 }
 
 // ServeHTTP handles the proxy request
-func (h *UpgradeAwareProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if len(h.Location.Scheme) == 0 {
 		h.Location.Scheme = "http"
 	}
@@ -135,7 +134,7 @@ func (h *UpgradeAwareProxyHandler) ServeHTTP(w http.ResponseWriter, req *http.Re
 }
 
 // tryUpgrade returns true if the request was handled.
-func (h *UpgradeAwareProxyHandler) tryUpgrade(w http.ResponseWriter, req *http.Request) bool {
+func (h *ProxyHandler) tryUpgrade(w http.ResponseWriter, req *http.Request) bool {
 	if !httpstream.IsUpgradeRequest(req) {
 		return false
 	}
@@ -214,7 +213,7 @@ func (h *UpgradeAwareProxyHandler) tryUpgrade(w http.ResponseWriter, req *http.R
 }
 
 // connectBackend dials the backend at location and forwards a copy of the client request.
-func (h *UpgradeAwareProxyHandler) connectBackend(method string, location *url.URL, header http.Header, body io.Reader) (conn net.Conn, err error) {
+func (h *ProxyHandler) connectBackend(method string, location *url.URL, header http.Header, body io.Reader) (conn net.Conn, err error) {
 	defer func() {
 		if err != nil && conn != nil {
 			conn.Close()
@@ -228,7 +227,7 @@ func (h *UpgradeAwareProxyHandler) connectBackend(method string, location *url.U
 	}
 	beReq.Header = header
 
-	conn, err = proxy.DialURL(location, h.Transport)
+	conn, err = DialURL(location, h.Transport)
 	if err != nil {
 		return conn, fmt.Errorf("error dialing backend: %v", err)
 	}
@@ -243,7 +242,7 @@ func (h *UpgradeAwareProxyHandler) connectBackend(method string, location *url.U
 // connectBackendWithRedirects dials the backend and forwards a copy of the client request. If the
 // client responds with a redirect, it is followed. The raw response bytes are returned, and should
 // be forwarded back to the client.
-func (h *UpgradeAwareProxyHandler) connectBackendWithRedirects(req *http.Request) (net.Conn, []byte, error) {
+func (h *ProxyHandler) connectBackendWithRedirects(req *http.Request) (net.Conn, []byte, error) {
 	const (
 		maxRedirects    = 10
 		maxResponseSize = 4096
@@ -320,7 +319,7 @@ redirectLoop:
 	return backendConn, rawResponse.Bytes(), nil
 }
 
-func (h *UpgradeAwareProxyHandler) defaultProxyTransport(url *url.URL, internalTransport http.RoundTripper) http.RoundTripper {
+func (h *ProxyHandler) defaultProxyTransport(url *url.URL, internalTransport http.RoundTripper) http.RoundTripper {
 	scheme := url.Scheme
 	host := url.Host
 	suffix := h.Location.Path
@@ -328,7 +327,7 @@ func (h *UpgradeAwareProxyHandler) defaultProxyTransport(url *url.URL, internalT
 		suffix += "/"
 	}
 	pathPrepend := strings.TrimSuffix(url.Path, suffix)
-	rewritingTransport := &proxy.Transport{
+	rewritingTransport := &Transport{
 		Scheme:       scheme,
 		Host:         host,
 		PathPrepend:  pathPrepend,

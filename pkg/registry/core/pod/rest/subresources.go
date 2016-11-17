@@ -28,8 +28,8 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/client"
 	"k8s.io/kubernetes/pkg/registry/core/pod"
 	"k8s.io/kubernetes/pkg/registry/generic/registry"
-	genericrest "k8s.io/kubernetes/pkg/registry/generic/rest"
 	"k8s.io/kubernetes/pkg/runtime"
+	proxyutil "k8s.io/kubernetes/pkg/util/proxy"
 )
 
 // ProxyREST implements the proxy subresource for a Pod
@@ -183,8 +183,8 @@ func (r *PortForwardREST) Connect(ctx api.Context, name string, opts runtime.Obj
 	return newThrottledUpgradeAwareProxyHandler(location, transport, false, true, true, responder), nil
 }
 
-func newThrottledUpgradeAwareProxyHandler(location *url.URL, transport http.RoundTripper, wrapTransport, upgradeRequired, interceptRedirects bool, responder rest.Responder) *genericrest.UpgradeAwareProxyHandler {
-	handler := genericrest.NewUpgradeAwareProxyHandler(location, transport, wrapTransport, upgradeRequired, responder)
+func newThrottledUpgradeAwareProxyHandler(location *url.URL, transport http.RoundTripper, wrapTransport, upgradeRequired, interceptRedirects bool, responder rest.Responder) *proxyutil.ProxyHandler {
+	handler := proxyutil.NewProxyHandler(location, transport, wrapTransport, upgradeRequired, responder)
 	handler.InterceptRedirects = interceptRedirects
 	handler.MaxBytesPerSec = capabilities.Get().PerConnectionBandwidthLimitBytesPerSec
 	return handler

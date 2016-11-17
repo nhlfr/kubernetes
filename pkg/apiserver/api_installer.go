@@ -68,7 +68,7 @@ var errEmptyName = errors.NewBadRequest("name must be provided")
 func (a *APIInstaller) Install(ws *restful.WebService) (apiResources []unversioned.APIResource, errors []error) {
 	errors = make([]error, 0)
 
-	proxyHandler := (&ProxyHandler{
+	proxyHandler := (&RedirectedProxyHandler{
 		prefix:     a.prefix + "/proxy/",
 		storage:    a.group.Storage,
 		serializer: a.group.Serializer,

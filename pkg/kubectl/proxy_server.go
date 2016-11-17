@@ -30,6 +30,7 @@ import (
 	"github.com/golang/glog"
 	"k8s.io/kubernetes/pkg/client/restclient"
 	"k8s.io/kubernetes/pkg/util"
+	proxyutil "k8s.io/kubernetes/pkg/util/proxy"
 )
 
 const (
@@ -138,6 +139,11 @@ func (f *FilterServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	rw.Write([]byte("<h3>Unauthorized</h3>"))
 }
 
+type responder struct{}
+
+func (r *responder) Error(err error) {
+}
+
 // ProxyServer is a http.Handler which proxies Kubernetes APIs to remote API server.
 type ProxyServer struct {
 	handler http.Handler
@@ -155,7 +161,7 @@ func NewProxyServer(filebase string, apiProxyPrefix string, staticPrefix string,
 	if err != nil {
 		return nil, err
 	}
-	proxy := newProxy(target)
+	/* proxy := newProxy(target)
 	if proxy.Transport, err = restclient.TransportFor(cfg); err != nil {
 		return nil, err
 	}
@@ -166,7 +172,14 @@ func NewProxyServer(filebase string, apiProxyPrefix string, staticPrefix string,
 
 	if !strings.HasPrefix(apiProxyPrefix, "/api") {
 		proxyServer = stripLeaveSlash(apiProxyPrefix, proxyServer)
+	} */
+
+	transport, err := restclient.TransportFor(cfg)
+	if err != nil {
+		return nil, err
 	}
+
+	proxyServer := proxyutil.NewProxyHandler(target, transport, true, false, &responder{})
 
 	mux := http.NewServeMux()
 	mux.Handle(apiProxyPrefix, proxyServer)
